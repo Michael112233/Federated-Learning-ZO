@@ -137,6 +137,17 @@ class LRmodel:
         loss = (-1 / len(X)) * np.sum(Y * np.log(y_hat) + (1 - Y) * np.log(1 - y_hat))
         return loss
 
+    def acc(self, w, X, Y):
+        y_hat = self.sigmoid(np.dot(X, w))
+        # index_num_1 = np.where(y_hat >= 0.5)
+        # index_num_0 = np.where(y_hat < 0.5)
+        # y_hat[index_num_0] = 0
+        # y_hat[index_num_1] = 1
+        y_hat = (y_hat >= 0.5) * 1
+        corrent_array = y_hat - Y
+        corrent_index = np.where(corrent_array == 0)
+        accuracy = len(corrent_index[0]) / len(Y)
+        return accuracy*100
 
 
 # class LRmodel(nn.Module):
