@@ -5,6 +5,37 @@
 
 import numpy as np
 from torchvision import datasets, transforms
+from sklearn.preprocessing import normalize
+
+class mnist_dataset:
+    def __init__(self, database):
+        self.X = database['Z']
+        self.Y = database['y']
+        self.Y = (self.Y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
+        # 添加一列全为1的偏置项列
+        self.X = np.hstack((self.X, np.ones((self.X.shape[0], 1))))
+        # 归一化特征向量
+        self.X = normalize(self.X, axis=1, norm='l2')
+        # 划分训练集、测试集
+        training_samples_ratio = 0.7
+        N = len(self.Y)
+        N_train = int(N * training_samples_ratio)
+
+        rand_idxs = np.random.permutation(N)
+        self.X_train = self.X[rand_idxs[:N_train]]
+        self.Y_train = self.Y[rand_idxs[:N_train]]
+        self.X_test = self.X[rand_idxs[N_train:]]
+        self.Y_test = self.Y[rand_idxs[N_train:]]
+
+    def sample(self, batch_size=64):
+        # 随机选择一个小批量
+        batch_indices = np.random.choice(self.X_train.shape[0], batch_size, replace=False)
+        X_batch = self.X_train[batch_indices]
+        Y_batch = self.Y_train[batch_indices]
+        return X_batch, Y_batch
+
+    def full(self):
+        return self.X_train, self.Y_train
 
 
 def mnist_iid(dataset, num_users):

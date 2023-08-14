@@ -18,9 +18,9 @@ from models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar, LRmodel
 
 if __name__ == '__main__':
     args = args_parser()
-    if args.gpu:
-        torch.cuda.set_device(args.gpu)
-    device = 'cuda' if args.gpu else 'cpu'
+    # if args.gpu:
+    #     torch.cuda.set_device(args.gpu)
+    # device = 'cuda' if args.gpu else 'cpu'
 
     # load datasets
     train_dataset, test_dataset, _ = get_dataset(args)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         exit('Error: unrecognized model')
 
     # Set the model to train and send it to device.
-    global_model.to(device)
+    # global_model.to(device)
     global_model.train()
     print(global_model)
 
@@ -63,14 +63,14 @@ if __name__ == '__main__':
 
     batch_size_constant = 64
     trainloader = DataLoader(train_dataset, batch_size=batch_size_constant, shuffle=True)
-    criterion = torch.nn.NLLLoss().to(device)
+    criterion = torch.nn.NLLLoss() # .to(device)
     epoch_loss = []
 
     for epoch in tqdm(range(args.epochs)):
         batch_loss = []
 
         for batch_idx, (images, labels) in enumerate(trainloader):
-            images, labels = images.to(device), labels.to(device)
+            # images, labels = images.to(device), labels.to(device)
             images = torch.reshape(images, [-1, 1, 784])   # add for logistic regression
             optimizer.zero_grad()
             outputs = global_model(images)

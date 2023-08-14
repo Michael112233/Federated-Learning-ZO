@@ -14,7 +14,6 @@ def get_dataset(args):
     the keys are the user index and the values are the corresponding data for
     each of those users.
     """
-
     if args.dataset == 'cifar':
         data_dir = '../data/cifar/'
         apply_transform = transforms.Compose(
