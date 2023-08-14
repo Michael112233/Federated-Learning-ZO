@@ -67,7 +67,7 @@ if __name__ == '__main__':
     #     global_model = LRmodel(784, 10) # add for logistic regression
     # else:
     #     exit('Error: unrecognized model')
-    mnist_data = sio.loadmat('/data/mnist/mnist.mat')
+    mnist_data = sio.loadmat('data/mnist/mnist.mat')
     mnist = mnist_dataset(database=mnist_data)
     global_model = LRmodel()
     client_rate = 0.5
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     print(client_index)
 
     # Training
-    iteration = 10000
+    iteration = 100
     eta = 2
     losses = []
     iter = []
@@ -103,3 +103,4 @@ if __name__ == '__main__':
             iter.append(i + 1)
             losses.append(l)
             print(f"Loss after iteration {i + 1}: {l}")
+
