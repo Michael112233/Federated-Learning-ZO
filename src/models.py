@@ -139,16 +139,26 @@ class LRmodel:
 
     def acc(self, w, X, Y):
         y_hat = self.sigmoid(np.dot(X, w))
-        # index_num_1 = np.where(y_hat >= 0.5)
-        # index_num_0 = np.where(y_hat < 0.5)
-        # y_hat[index_num_0] = 0
-        # y_hat[index_num_1] = 1
         y_hat = (y_hat >= 0.5) * 1
         corrent_array = y_hat - Y
         corrent_index = np.where(corrent_array == 0)
         accuracy = len(corrent_index[0]) / len(Y)
         return accuracy*100
 
+class LRmodel_csr:
+    def sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))
+    def grad(self, w, X, Y):
+        y_hat = self.sigmoid(X.dot(w))
+        # 计算梯度
+        dw = (1 / len(Y)) * X.T.dot(y_hat - Y)
+        return dw
+
+    def loss(self, w, X, Y):
+        y_hat = self.sigmoid(X.dot(w))
+        # 计算损失函数
+        loss = (-1 / len(Y)) * np.sum(Y * np.log(y_hat) + (1 - Y) * np.log(1 - y_hat))
+        return loss
 
 # class LRmodel(nn.Module):
 #     def __init__(self, n_input, n_output):
