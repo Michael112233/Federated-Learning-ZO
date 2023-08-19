@@ -6,6 +6,7 @@
 import numpy as np
 from torchvision import datasets, transforms
 from sklearn.preprocessing import normalize
+from scipy.sparse import hstack, csr_matrix
 
 class mnist_dataset:
     def __init__(self, database):
@@ -37,6 +38,40 @@ class mnist_dataset:
     def full(self):
         return self.X_train, self.Y_train
 
+class csr_dataset:
+    def __init__(self, x ,y):
+        self.X = x
+        self.Y = y
+        # 创建全为1的列向量，作为偏置项列
+        bias_column = np.ones(self.X.shape[0])
+
+        # 将偏置项列转换为稀疏矩阵格式
+        bias_column_sparse = csr_matrix(bias_column).transpose()
+
+        # 将稀疏矩阵与偏置项列拼接
+        self.X = hstack([self.X, bias_column_sparse])
+        # 归一化特征向量
+        self.X = normalize(self.X, axis=1, norm='l2')
+        # 划分训练集、测试集
+        training_samples_ratio = 0.7
+        N = len(self.Y)
+        N_train = int(N * training_samples_ratio)
+
+        rand_idxs = np.random.permutation(N)
+        self.X_train = self.X[rand_idxs[:N_train]]
+        self.Y_train = self.Y[rand_idxs[:N_train]]
+        self.X_test = self.X[rand_idxs[N_train:]]
+        self.Y_test = self.Y[rand_idxs[N_train:]]
+
+    def sample(self, batch_size=64):
+        # 随机选择一个小批量
+        batch_indices = np.random.choice(self.X_train.shape[0], batch_size, replace=False)
+        X_batch = self.X_train[batch_indices]
+        Y_batch = self.Y_train[batch_indices]
+        return X_batch, Y_batch
+
+    def full(self):
+        return self.X_train, self.Y_train
 
 def mnist_iid(dataset, num_users):
     """
