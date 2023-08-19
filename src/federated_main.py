@@ -6,22 +6,36 @@
 import random
 import time
 import numpy as np
-from sampling import mnist_dataset
-from models import LRmodel
+from sampling import mnist_dataset, csr_dataset
+from models import LRmodel, LRmodel_csr
+from sklearn.datasets import load_svmlight_file
 import scipy.io as sio
+
+from options import args_parser
+
 
 def update_client(weights):
     for i in range(local_iteration):
-        X, Y = mnist.sample(batch_size=64)
+        X, Y = dataset.sample(batch_size=64)
         g = global_model.grad(weights, X, Y)
         weights -= eta * g
     return weights
 
 if __name__ == '__main__':
     start_time = time.time()
-    mnist_data = sio.loadmat('data/mnist/mnist.mat')
-    mnist = mnist_dataset(database=mnist_data)
-    global_model = LRmodel()
+    args = args_parser()
+
+    if args.dataset == 'mnist':
+        mnist_data = sio.loadmat('data/mnist/mnist.mat')
+        dataset = mnist_dataset(database=mnist_data)
+        global_model = LRmodel()
+    elif args.dataset == 'rcv':
+        X, Y = load_svmlight_file('data/rcv/rcv1_test.binary')
+        Y = Y.reshape(-1, 1)
+        Y = (Y + 1) / 2
+        global_model = LRmodel_csr()
+        dataset = csr_dataset(X, Y)
+
     client_rate = 0.5
     client_number = 10
     client_index = []
@@ -35,7 +49,7 @@ if __name__ == '__main__':
     eta = 2
     losses = []
     iter = []
-    weights = np.ones(mnist.X_train.shape[1]).reshape(-1, 1)
+    weights = np.ones(dataset.X_train.shape[1]).reshape(-1, 1)
 
     for i in range(iteration):
         weights_list = []
@@ -49,10 +63,10 @@ if __name__ == '__main__':
         weights = sum(weights_list) / chosen_client_num
 
         if (i + 1) % 50 == 0:
-            Xfull, Yfull = mnist.full()
+            Xfull, Yfull = dataset.full()
             l = global_model.loss(weights, Xfull, Yfull)
-            acc = global_model.acc(weights, Xfull, Yfull)
+            # acc = global_model.acc(weights, Xfull, Yfull)
             iter.append(i + 1)
             losses.append(l)
-            print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(i+1, l, acc))
-
+            # print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(i+1, l, acc))
+            print("After iteration {}: loss is {}".format(i + 1, l))
