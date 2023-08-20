@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Python version: 3.6
-
-
+import copy
 import random
 import time
 import numpy as np
@@ -45,7 +44,7 @@ if __name__ == '__main__':
     # print(client_index)
 
     # Training
-    iteration = 1000
+    iteration = 100
     eta = 2
     losses = []
     iter = []
@@ -53,16 +52,18 @@ if __name__ == '__main__':
 
     for i in range(iteration):
         weights_list = []
+        cnt = 0
         chosen_client_num = int(max(client_rate * client_number, 1))
         chosen_client = random.sample(client_index, chosen_client_num)
 
         # train
         for k in chosen_client:
-            weights_of_client = update_client(weights)
-            weights_list.append(weights_of_client)
+            weight_of_client = update_client(weights)
+            weights_list.append(copy.deepcopy(weight_of_client))
+
         weights = sum(weights_list) / chosen_client_num
 
-        if (i + 1) % 50 == 0:
+        if (i + 1) % 1 == 0:
             Xfull, Yfull = dataset.full()
             l = global_model.loss(weights, Xfull, Yfull)
             # acc = global_model.acc(weights, Xfull, Yfull)
