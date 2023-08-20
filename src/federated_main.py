@@ -5,7 +5,7 @@ import copy
 import random
 import time
 import numpy as np
-from sampling import mnist_dataset, csr_dataset
+from sampling import mnist_dataset, csr_dataset, iid_partition
 from models import LRmodel, LRmodel_csr
 from sklearn.datasets import load_svmlight_file
 import scipy.io as sio
@@ -13,9 +13,9 @@ import scipy.io as sio
 from options import args_parser
 
 
-def update_client(weights):
+def update_client(weights, partition_index):
     for i in range(local_iteration):
-        X, Y = dataset.sample(batch_size=64)
+        X, Y = dataset.sample(partition_index, batch_size=64)
         g = global_model.grad(weights, X, Y)
         weights -= eta * g
     return weights
@@ -39,6 +39,7 @@ if __name__ == '__main__':
     client_number = 10
     client_index = []
     local_iteration = 10
+
     for i in range(client_number):
         client_index.append(i)
     # print(client_index)
@@ -49,6 +50,7 @@ if __name__ == '__main__':
     losses = []
     iter = []
     weights = np.ones(dataset.X_train.shape[1]).reshape(-1, 1)
+    partition_index = iid_partition(dataset, client_number)
 
     for i in range(iteration):
         weights_list = []
@@ -58,7 +60,7 @@ if __name__ == '__main__':
 
         # train
         for k in chosen_client:
-            weight_of_client = update_client(weights)
+            weight_of_client = update_client(weights, partition_index[k])
             weights_list.append(copy.deepcopy(weight_of_client))
 
         weights = sum(weights_list) / chosen_client_num
