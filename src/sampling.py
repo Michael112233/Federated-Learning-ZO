@@ -23,26 +23,25 @@ class data:
         self.X_test = self.X[rand_idxs[N_train:]]
         self.Y_test = self.Y[rand_idxs[N_train:]]
 
-    def sample(self, batch_size=64):
+    def sample(self, chosen_index, batch_size=64):
         # 随机选择一个小批量
-        batch_indices = np.random.choice(self.X_train.shape[0], batch_size, replace=False)
+        batch_indices = np.random.choice(chosen_index, batch_size, replace=True)
         X_batch = self.X_train[batch_indices]
         Y_batch = self.Y_train[batch_indices]
         return X_batch, Y_batch
 
     def full(self):
         return self.X_train, self.Y_train
+    def length(self):
+        return self.X_train.shape[0]
 
 
-def iid_partition(X, Y, num_clients):
-    N = len(Y)
-    N_per = int(N / num_clients)
-    rand_idxs = np.random.permutation(N)
-    X_per = {}
-    Y_per = {}
+def iid_partition(length, num_clients):
+    N_per = int(length / num_clients)
+    rand_idxs = np.random.permutation(length)
+    dict_index = {}
     for i in range(num_clients):
-        X_per[i] = X[rand_idxs[i*N_per:(i+1)*N_per]]
-        Y_per[i] = Y[rand_idxs[i * N_per:(i + 1) * N_per]]
+        dict_index[i] = rand_idxs[i*N_per:(i+1)*N_per]
     # num_items = int(len(Y) / num_clients)
     # dict_clients, all_idxs = {}, [i for i in range(len(Y))]
     # for i in range(num_clients):
@@ -50,7 +49,8 @@ def iid_partition(X, Y, num_clients):
     #                                          replace=False))
     #     all_idxs = list(set(all_idxs) - dict_clients[i])
     #     dict_clients[i] = list(dict_clients[i])
-    return X_per, Y_per
+    # print(dict_index)
+    return dict_index
 
 # def mnist_iid(dataset, num_users):
 #     """

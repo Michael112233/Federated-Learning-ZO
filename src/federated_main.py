@@ -15,10 +15,10 @@ from scipy.sparse import hstack, csr_matrix
 from options import args_parser
 
 
-def update_client(weights, client_dataset):
+def update_client(weights, chosen_index):
     # print(client_dataset.X_train.shape)
     for i in range(local_iteration):
-        X, Y = client_dataset.sample(batch_size=64)
+        X, Y = dataset.sample(chosen_index, batch_size=64)
         g = global_model.grad(weights, X, Y)
         weights -= eta * g
     return weights
@@ -26,9 +26,10 @@ def update_client(weights, client_dataset):
 if __name__ == '__main__':
     start_time = time.time()
     args = args_parser()
-
-    if args.dataset == 'mnist':
-        mnist_data = sio.loadmat('data/mnist/mnist.mat')
+    dataset_name = args.dataset
+    dataset_name = 'mnist'
+    if dataset_name == 'mnist':
+        mnist_data = sio.loadmat('../data/mnist/mnist.mat')
         x = mnist_data['Z']
         y = mnist_data['y']
         y = (y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
@@ -41,8 +42,8 @@ if __name__ == '__main__':
         X = dataset.X_train
         Y = dataset.Y_train
         global_model = LRmodel()
-    elif args.dataset == 'rcv':
-        X, Y = load_svmlight_file('data/rcv/rcv1_test.binary')
+    elif dataset_name == 'rcv':
+        X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
         Y = Y.reshape(-1, 1)
         Y = (Y + 1) / 2
         # 创建全为1的列向量，作为偏置项列
@@ -59,17 +60,15 @@ if __name__ == '__main__':
         global_model = LRmodel_csr()
 
     client_rate = 0.5
-    client_number = 10
+    client_number = 50
     client_index = []
     client_dataset = {}
-    local_iteration = 10
+    local_iteration = 50
     # 划分客户端训练集
-    X_per, Y_per = iid_partition(X, Y, client_number)
+
+    partition_index = iid_partition(dataset.length(), client_number)
     for i in range(client_number):
         client_index.append(i)
-        client_dataset[i] = data(X_per[i], Y_per[i], 1)
-
-
     # print(client_index)
 
     # Training
@@ -87,20 +86,20 @@ if __name__ == '__main__':
 
         # train
         for k in chosen_client:
-            weight_of_client = update_client(weights, client_dataset[k])
+            weight_of_client = update_client(weights, partition_index[k])
             weights_list.append(copy.deepcopy(weight_of_client))
 
         weights = sum(weights_list) / chosen_client_num
 
-        if (i + 1) % 100 == 0:
+        if (i + 1) % 1000 == 0:
             Xfull, Yfull = dataset.full()
             l = global_model.loss(weights, Xfull, Yfull)
-            acc = 0.00
-            if args.dataset == "mnist":
-                acc = global_model.acc(weights, Xfull, Yfull)
+            # acc = global_model.acc(weights, Xfull, Yfull)
             iter.append(i + 1)
             losses.append(l)
-            if args.dataset == "mnist":
-                print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(i+1, l, acc))
-            else:
-                print("After iteration {}: loss is {}".format(i + 1, l))
+            # print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(i+1, l, acc))
+            print("After iteration {}: loss is {}".format(i + 1, l))
+
+    end_time = time.time()
+    print("total time is {:.3f}".format(end_time-start_time))
+
