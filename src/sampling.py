@@ -8,59 +8,12 @@ from torchvision import datasets, transforms
 from sklearn.preprocessing import normalize
 from scipy.sparse import hstack, csr_matrix
 
-class mnist_dataset:
-    def __init__(self, database):
-        self.X = database['Z']
-        self.Y = database['y']
-        self.Y = (self.Y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
-        # 添加一列全为1的偏置项列
-        self.X = np.hstack((self.X, np.ones((self.X.shape[0], 1))))
-        # 归一化特征向量
-        self.X = normalize(self.X, axis=1, norm='l2')
-        # 划分训练集、测试集
-        training_samples_ratio = 0.7
-        N = len(self.Y)
-        N_train = int(N * training_samples_ratio)
-
-        rand_idxs = np.random.permutation(N)
-        self.X_train = self.X[rand_idxs[:N_train]]
-        self.Y_train = self.Y[rand_idxs[:N_train]]
-        self.X_test = self.X[rand_idxs[N_train:]]
-        self.Y_test = self.Y[rand_idxs[N_train:]]
-
-    def sample(self, partition_index, batch_size=64):
-        # print(self.X_train)
-        # print(self.Y_train)
-        # print(partition_index)
-        # 随机选择一个小批量
-        X_chosen = self.X_train[partition_index]
-        Y_chosen = self.Y_train[partition_index]
-        batch_indices = np.random.choice(len(X_chosen), batch_size, replace=False)
-        X_batch = X_chosen[batch_indices]
-        Y_batch = Y_chosen[batch_indices]
-        return X_batch, Y_batch
-
-    def full(self):
-        return self.X_train, self.Y_train
-    def length(self):
-        return self.X_train.shape[0]
-
-class csr_dataset:
-    def __init__(self, x ,y):
+class data:
+    def __init__(self, x, y, ratio):
         self.X = x
         self.Y = y
-        # 创建全为1的列向量，作为偏置项列
-        bias_column = np.ones(self.X.shape[0])
-
-        # 将偏置项列转换为稀疏矩阵格式
-        bias_column_sparse = csr_matrix(bias_column).transpose()
-
-        # 将稀疏矩阵与偏置项列拼接
-        self.X = hstack([self.X, bias_column_sparse])
-        # 归一化特征向量
-        self.X = normalize(self.X, axis=1, norm='l2')
         # 划分训练集、测试集
-        training_samples_ratio = 0.7
+        training_samples_ratio = ratio
         N = len(self.Y)
         N_train = int(N * training_samples_ratio)
 
@@ -70,31 +23,34 @@ class csr_dataset:
         self.X_test = self.X[rand_idxs[N_train:]]
         self.Y_test = self.Y[rand_idxs[N_train:]]
 
-    def sample(self, partition_index, batch_size=64):
+    def sample(self, batch_size=64):
         # 随机选择一个小批量
-        X_chosen = self.X_train[partition_index]
-        Y_chosen = self.Y_train[partition_index]
-        # print(X_chosen)
-        batch_indices = np.random.choice(X_chosen.shape[0], batch_size, replace=False)
-        X_batch = X_chosen[batch_indices]
-        Y_batch = Y_chosen[batch_indices]
+        batch_indices = np.random.choice(self.X_train.shape[0], batch_size, replace=False)
+        X_batch = self.X_train[batch_indices]
+        Y_batch = self.Y_train[batch_indices]
         return X_batch, Y_batch
 
     def full(self):
         return self.X_train, self.Y_train
 
-    def length(self):
-        return self.X_train.shape[0]
 
-def iid_partition(dataset, num_clients):
-    num_items = int(dataset.length() / num_clients)
-    dict_clients, all_idxs = {}, [i for i in range(dataset.length())]
+def iid_partition(X, Y, num_clients):
+    N = len(Y)
+    N_per = int(N / num_clients)
+    rand_idxs = np.random.permutation(N)
+    X_per = {}
+    Y_per = {}
     for i in range(num_clients):
-        dict_clients[i] = set(np.random.choice(all_idxs, num_items,
-                                             replace=False))
-        all_idxs = list(set(all_idxs) - dict_clients[i])
-        dict_clients[i] = list(dict_clients[i])
-    return dict_clients
+        X_per[i] = X[rand_idxs[i*N_per:(i+1)*N_per]]
+        Y_per[i] = Y[rand_idxs[i * N_per:(i + 1) * N_per]]
+    # num_items = int(len(Y) / num_clients)
+    # dict_clients, all_idxs = {}, [i for i in range(len(Y))]
+    # for i in range(num_clients):
+    #     dict_clients[i] = set(np.random.choice(all_idxs, num_items,
+    #                                          replace=False))
+    #     all_idxs = list(set(all_idxs) - dict_clients[i])
+    #     dict_clients[i] = list(dict_clients[i])
+    return X_per, Y_per
 
 # def mnist_iid(dataset, num_users):
 #     """
