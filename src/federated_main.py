@@ -14,14 +14,14 @@ from scipy.sparse import hstack, csr_matrix
 
 from options import args_parser
 
-
-def update_client(weights, chosen_index):
+def update_client(weights, chosen_index, total_grad):
     # print(client_dataset.X_train.shape)
     for i in range(local_iteration):
-        X, Y = dataset.sample(chosen_index, batch_size=64)
+        X, Y = dataset.sample(chosen_index, batch_size=20)
         g = global_model.grad(weights, X, Y)
+        total_grad += 1
         weights -= eta * g
-    return weights
+    return weights, total_grad
 
 if __name__ == '__main__':
     start_time = time.time()
@@ -60,10 +60,11 @@ if __name__ == '__main__':
         global_model = LRmodel_csr()
 
     client_rate = 0.5
-    client_number = 50
+    client_number = 100
     client_index = []
     client_dataset = {}
-    local_iteration = 50
+    local_iteration = 20
+    total_grad = 0
     # 划分客户端训练集
 
     partition_index = iid_partition(dataset.length(), client_number)
@@ -86,7 +87,7 @@ if __name__ == '__main__':
 
         # train
         for k in chosen_client:
-            weight_of_client = update_client(weights, partition_index[k])
+            weight_of_client, total_grad = update_client(weights, partition_index[k], total_grad)
             weights_list.append(copy.deepcopy(weight_of_client))
 
         weights = sum(weights_list) / chosen_client_num
@@ -102,4 +103,5 @@ if __name__ == '__main__':
 
     end_time = time.time()
     print("total time is {:.3f}".format(end_time-start_time))
+    print("total grad times is {:.2f}".format(total_grad))
 
