@@ -17,7 +17,7 @@ from options import args_parser
 def update_client(weights, chosen_index, total_grad):
     # print(client_dataset.X_train.shape)
     for i in range(local_iteration):
-        X, Y = dataset.sample(chosen_index, batch_size=20)
+        X, Y = dataset.sample(chosen_index, batch_size=64)
         g = global_model.grad(weights, X, Y)
         total_grad += 1
         weights -= eta * g
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         global_model = LRmodel_csr()
 
     client_rate = 0.5
-    client_number = 100
+    client_number = 50
     client_index = []
     client_dataset = {}
     local_iteration = 20
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # print(client_index)
 
     # Training
-    iteration = 10000
+    iteration = 5000
     eta = 2
     losses = []
     iter = []
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
         weights = sum(weights_list) / chosen_client_num
 
-        if (i + 1) % 1000 == 0:
+        if (i + 1) % 500 == 0:
             Xfull, Yfull = dataset.full()
             l = global_model.loss(weights, Xfull, Yfull)
             # acc = global_model.acc(weights, Xfull, Yfull)
