@@ -11,10 +11,10 @@ class LRmodel:
 
     def grad(self, w, X, Y):
         y_hat = self.sigmoid(np.dot(X, w))
-        print()
-        print(w.shape)
-        print(X.shape)
-        print(Y.shape)
+        # print()
+        # print(w.shape)
+        # print(X.shape)
+        # print(Y.shape)
         # 计算梯度
         dw = (1 / len(X)) * np.dot(X.T, y_hat - Y)
         return dw

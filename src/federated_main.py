@@ -73,12 +73,12 @@ if __name__ == '__main__':
     # print(client_index)
 
     # Training
-    iteration = 1
-    eta = 2
+    iteration = 2000
+    eta = 0.1
     losses = []
     iter = []
     weights = np.ones(dataset.X_train.shape[1]).reshape(-1, 1)
-    print(weights.shape)
+    # print(weights.shape)
 
     for i in range(iteration):
         weights_list = []
