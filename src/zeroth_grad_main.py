@@ -19,15 +19,17 @@ from utils import get_loss
 def update_client(weights, chosen_index, current_round, total_grad):
     for i in range(local_iteration):
         X, Y = dataset.sample(chosen_index, batch_size)
+        # get matrix V（加一的目的是想让服务器生成完P矩阵后通过else的方法生成v矩阵）
         if current_round <= memory_length+1:
             v_matrix = np.random.randn(dataset.X_train.shape[1], 1)
         else:
             z0 = np.random.randn(dataset.X_train.shape[1], 1)
             z1 = np.random.randn(memory_length, 1)
             v_matrix = np.sqrt(1-alpha) * z0 + np.sqrt(alpha * dataset.X_train.shape[1] / memory_length) * p_matrix.dot(z1)
-            # print(p_matrix)
+        # calculate gradient
         g = global_model.grad(weights, radius, v_matrix, X, Y)
         total_grad += 1
+        # gradient descent
         weights -= eta * g
     return weights, total_grad
 
@@ -113,19 +115,19 @@ if __name__ == '__main__':
 
         weights = sum(weights_list) / chosen_client_num
 
+        # 此处设置余数为1是为了贴合算法中的下标
         if i % memory_length == 1 and i > 1:
-            # weight_server_array = np.array(weight_server_list).reshape((memory_length+1, n))
-            # print("i={}".format(i))
+            # generate delta_weight_list
             for j in range(i, i-memory_length, -1):
-                # print(j, j-1)
                 delta_weight_list.append(copy.deepcopy(weight_server_list[j] - weight_server_list[j-1]))
-            # print(delta_weight_list)
             delta_list = np.array(delta_weight_list)
+            # initialize matrix P
             p_matrix, _ = np.linalg.qr(delta_list.T)
             delta_weight_list = []
             p_matrix = p_matrix.reshape((n, memory_length))
             # print(p_matrix.shape)
 
+        #calculate loss
         if (i + 1) % 50 == 0:
             iter.append(i + 1)
             losses = get_loss(global_model, dataset, weights, i+1, losses)
