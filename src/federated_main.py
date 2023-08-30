@@ -19,7 +19,7 @@ def update_client(weights, chosen_index, total_grad):
     for i in range(local_iteration):
         X, Y = dataset.sample(chosen_index, batch_size=64)
         g = global_model.grad(weights, X, Y)
-        total_grad += 1
+        total_grad += 1 * 64
         weights -= eta * g
     return weights, total_grad
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         # 提取出训练集
         X = dataset.X_train
         Y = dataset.Y_train
-        global_model = LRmodel()
+        global_model = LRmodel(X.shape[1])
     elif dataset_name == 'rcv':
         X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
         Y = Y.reshape(-1, 1)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         dataset = data(X, Y, 0.7)
         X = dataset.X_train
         Y = dataset.Y_train
-        global_model = LRmodel_csr()
+        global_model = LRmodel_csr(X.shape[1])
 
     client_rate = 0.5
     client_number = 50
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # print(client_index)
 
     # Training
-    iteration = 1000
+    iteration = 2000
     eta = 0.1
     losses = []
     iter = []
