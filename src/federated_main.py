@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # print(client_index)
 
     # Training
-    iteration = 2000
+    iteration = 1000
     eta = 0.1
     losses = []
     iter = []
@@ -93,14 +93,14 @@ if __name__ == '__main__':
 
         weights = sum(weights_list) / chosen_client_num
 
-        if (i + 1) % 500 == 0:
+        if (i + 1) % 100 == 0:
             Xfull, Yfull = dataset.full()
             l = global_model.loss(weights, Xfull, Yfull)
-            # acc = global_model.acc(weights, Xfull, Yfull)
+            acc = global_model.acc(weights, Xfull, Yfull)
             iter.append(i + 1)
             losses.append(l)
-            # print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(i+1, l, acc))
-            print("After iteration {}: loss is {}".format(i + 1, l))
+            print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(i+1, l, acc))
+            # print("After iteration {}: loss is {}".format(i + 1, l))
 
     end_time = time.time()
     print("total time is {:.3f}".format(end_time-start_time))

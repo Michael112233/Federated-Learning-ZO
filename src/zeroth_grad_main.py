@@ -6,7 +6,7 @@ import random
 import time
 import numpy as np
 from sampling import data, iid_partition
-from models import LRmodel, LRmodel_csr, Zeroth_grad_model
+from models import LRmodel, LRmodel_csr
 from sklearn.datasets import load_svmlight_file
 import scipy.io as sio
 from sklearn.preprocessing import normalize
@@ -20,15 +20,18 @@ def update_client(weights, chosen_index, current_round, total_grad):
     for i in range(local_iteration):
         X, Y = dataset.sample(chosen_index, batch_size)
         # get matrix V（加一的目的是想让服务器生成完P矩阵后通过else的方法生成v矩阵）
-        if current_round <= memory_length+1:
-            v_matrix = np.random.randn(dataset.X_train.shape[1], 1)
+        if current_round <= memory_length:
+            v_matrix = np.random.randn(global_model.len(), 1)
         else:
-            z0 = np.random.randn(dataset.X_train.shape[1], 1)
+            z0 = np.random.randn(global_model.len(), 1)
             z1 = np.random.randn(memory_length, 1)
-            v_matrix = np.sqrt(1-alpha) * z0 + np.sqrt(alpha * dataset.X_train.shape[1] / memory_length) * p_matrix.dot(z1)
+            v_matrix = np.sqrt(1-alpha) * z0 + np.sqrt(alpha * global_model.len() / memory_length) * p_matrix.dot(z1)
         # calculate gradient
-        g = global_model.grad(weights, radius, v_matrix, X, Y)
-        total_grad += 1
+        upper_val = global_model.loss((weights + radius * v_matrix), X, Y)
+        lower_val = global_model.loss((weights - radius * v_matrix), X, Y)
+        g = (upper_val - lower_val) * (1 / (2 * radius)) * v_matrix
+        # 函数评估次数，需要每次乘上minibatch，在该算法中评估了两次，得出下式
+        total_grad += 2 * batch_size
         # gradient descent
         weights -= eta * g
     return weights, total_grad
@@ -51,7 +54,7 @@ if __name__ == '__main__':
         # 提取出训练集
         X = dataset.X_train
         Y = dataset.Y_train
-        global_model = Zeroth_grad_model()
+        global_model = LRmodel(X.shape[1])
     elif dataset_name == 'rcv':
         X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
         Y = Y.reshape(-1, 1)
@@ -67,7 +70,7 @@ if __name__ == '__main__':
         dataset = data(X, Y, 0.7)
         X = dataset.X_train
         Y = dataset.Y_train
-        global_model = LRmodel_csr()
+        global_model = LRmodel_csr(X.shape[1])
 
     client_rate = 0.5
     client_number = 50
@@ -76,7 +79,6 @@ if __name__ == '__main__':
     local_iteration = 20
     total_grad = 0
     dataset_length = dataset.length()
-    n = X.shape[1]
     batch_size = 64
     # 划分客户端训练集
 
@@ -86,7 +88,7 @@ if __name__ == '__main__':
     # print(client_index)
 
     # initialize parameters
-    iteration = 5000
+    iteration = 2000
     eta = 0.1
     radius = 1e-6
     alpha = 0.5
@@ -95,15 +97,15 @@ if __name__ == '__main__':
     losses = []
     iter = []
     # initialize x0
-    weights = np.ones(dataset.X_train.shape[1]).reshape(-1, 1)
-    last_weight = np.zeros(dataset.X_train.shape[1]).reshape(-1, 1)
-    q_matrix = np.random.randn(dataset.X_train.shape[1], 1)
-    p_matrix = np.empty((n, memory_length))
-    weight_server_list = []
+    weights = np.ones(global_model.len()).reshape(-1, 1)
+    last_weight = np.zeros(global_model.len()).reshape(-1, 1)
+    q_matrix = np.random.randn(global_model.len(), 1)
+    p_matrix = np.empty((global_model.len(), memory_length))
+    last_weight = weights
+    this_weight = weights
     delta_weight_list = []
     for i in range(iteration):
         # draw a client set C_r
-        weight_server_list.append(copy.deepcopy(weights))
         weights_list = []
         cnt = 0
         chosen_client_num = int(max(client_rate * client_number, 1))
@@ -114,21 +116,23 @@ if __name__ == '__main__':
             weights_list.append(copy.deepcopy(weight_of_client))
 
         weights = sum(weights_list) / chosen_client_num
+        this_weight = weights
+        delta_weight_list.append(copy.deepcopy(this_weight - last_weight))
+        last_weight = this_weight
 
-        # 此处设置余数为1是为了贴合算法中的下标
-        if i % memory_length == 1 and i > 1:
+        if len(delta_weight_list) % memory_length == 0:
             # generate delta_weight_list
-            for j in range(i, i-memory_length, -1):
-                delta_weight_list.append(copy.deepcopy(weight_server_list[j] - weight_server_list[j-1]))
             delta_list = np.array(delta_weight_list)
+            # print(delta_list.shape)
+            delta_list = (delta_list.reshape((memory_length, global_model.len()))).T
             # initialize matrix P
-            p_matrix, _ = np.linalg.qr(delta_list.T)
+            p_matrix, _ = np.linalg.qr(delta_list)
             delta_weight_list = []
-            p_matrix = p_matrix.reshape((n, memory_length))
+            # p_matrix = p_matrix.reshape((global_model.len(), memory_length))
             # print(p_matrix.shape)
 
         #calculate loss
-        if (i + 1) % 50 == 0:
+        if (i + 1) % 100 == 0:
             iter.append(i + 1)
             losses = get_loss(global_model, dataset, weights, i+1, losses)
 
