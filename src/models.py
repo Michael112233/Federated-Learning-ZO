@@ -36,6 +36,8 @@ class LRmodel:
         return self.length
 
 class LRmodel_csr:
+    def __init__(self, length):
+        self.length = length
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
     def grad(self, w, X, Y):
@@ -43,11 +45,10 @@ class LRmodel_csr:
         # 计算梯度
         dw = (1 / len(Y)) * X.T.dot(y_hat - Y)
         return dw
-
     def loss(self, w, X, Y):
         y_hat = self.sigmoid(X.dot(w))
         # 计算损失函数
         loss = (-1 / len(Y)) * np.sum(Y * np.log(y_hat) + (1 - Y) * np.log(1 - y_hat))
         return loss
     def len(self):
-        return dataset.X_train[1]
+        return self.length
