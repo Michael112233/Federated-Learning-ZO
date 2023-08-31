@@ -3,7 +3,6 @@
 # Python version: 3.6
 
 import numpy as np
-from sampling import data
 
 #logistic regression mnist
 class LRmodel:

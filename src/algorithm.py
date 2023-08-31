@@ -1,8 +1,6 @@
 import copy
-
 import numpy as np
 
-dataset_name = 'mnist'
 client_rate = 0.5
 client_number = 50
 local_iteration = 20
@@ -11,13 +9,17 @@ iteration = 2000
 eta = 0.1
 batch_size = 64
 
+
 def get_loss(global_model, dataset, weights, current_round, losses):
     Xfull, Yfull = dataset.full()
     l = global_model.loss(weights, Xfull, Yfull)
-    acc = global_model.acc(weights, Xfull, Yfull)
-    print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(current_round, l, acc))
+    # acc = global_model.acc(weights, Xfull, Yfull)
+    # print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(current_round, l, acc))
+    print("After iteration {}: loss is {}".format(current_round, l))
+
     losses.append(l)
     return losses
+
 
 class FedAvg:
     def __init__(self, dataset, global_model):
@@ -26,6 +28,7 @@ class FedAvg:
         self.total_grad = 0
         self.evaluate_time = 1
         self.chosen_client_num = int(max(client_rate * client_number, 1))
+
     def update_client(self, weights, chosen_index, current_round=0):
         for i in range(local_iteration):
             X, Y = self.dataset.sample(chosen_index, batch_size)
@@ -33,13 +36,16 @@ class FedAvg:
             self.total_grad += self.evaluate_time * batch_size
             weights -= eta * g
         return weights, self.total_grad
+
     def average(self, weights_list):
         weights = sum(weights_list) / self.chosen_client_num
         return weights
 
+
 radius = 1e-6
 alpha = 0.5
 memory_length = 5
+
 
 class Zeroth_grad:
     def __init__(self, dataset, global_model):
@@ -62,7 +68,8 @@ class Zeroth_grad:
             else:
                 z0 = np.random.randn(self.global_model.len(), 1)
                 z1 = np.random.randn(memory_length, 1)
-                v_matrix = np.sqrt(1 - alpha) * z0 + np.sqrt(alpha * self.global_model.len() / memory_length) * self.p_matrix.dot(
+                v_matrix = np.sqrt(1 - alpha) * z0 + np.sqrt(
+                    alpha * self.global_model.len() / memory_length) * self.p_matrix.dot(
                     z1)
             # calculate gradient
             upper_val = self.global_model.loss((weights + radius * v_matrix), X, Y)

@@ -5,52 +5,22 @@ import copy
 import random
 import time
 import numpy as np
-from sampling import data, iid_partition
-from models import LRmodel, LRmodel_csr
-from sklearn.datasets import load_svmlight_file
-import scipy.io as sio
-from sklearn.preprocessing import normalize
-from scipy.sparse import hstack, csr_matrix
+from sampling import iid_partition, get_rcv1, get_mnist
 from options import args_parser
-from algorithm import dataset_name, client_number, iteration, client_rate, FedAvg, get_loss, Zeroth_grad
+from algorithm import client_number, iteration, client_rate, FedAvg, get_loss, Zeroth_grad
 
 if __name__ == '__main__':
     start_time = time.time()
     args = args_parser()
 
+    dataset_name = 'mnist'
     algorithm_name = 'zeroth_grad'
 
     # initialize
     if dataset_name == 'rcv':
-        X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
-        Y = Y.reshape(-1, 1)
-        Y = (Y + 1) / 2
-        # 创建全为1的列向量，作为偏置项列
-        bias_column = np.ones(X.shape[0])
-        # 将偏置项列转换为稀疏矩阵格式
-        bias_column_sparse = csr_matrix(bias_column).transpose()
-        # 将稀疏矩阵与偏置项列拼接
-        X = hstack([X, bias_column_sparse])
-        # 归一化特征向量
-        X = normalize(X, axis=1, norm='l2')
-        dataset = data(X, Y, 0.7)
-        X = dataset.X_train
-        Y = dataset.Y_train
-        global_model = LRmodel_csr(X.shape[1])
+        dataset, X, Y, global_model = get_rcv1()
     else:
-        mnist_data = sio.loadmat('../data/mnist/mnist.mat')
-        x = mnist_data['Z']
-        y = mnist_data['y']
-        y = (y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
-        # 添加一列全为1的偏置项列
-        x = np.hstack((x, np.ones((x.shape[0], 1))))
-        # 归一化特征向量
-        x = normalize(x, axis=1, norm='l2')
-        dataset = data(x, y, 0.7)
-        # 提取出训练集
-        X = dataset.X_train
-        Y = dataset.Y_train
-        global_model = LRmodel(X.shape[1])
+        dataset, X, Y, global_model = get_mnist()
 
     if algorithm_name == 'zeroth_grad':
         algorithm = Zeroth_grad(dataset, global_model)
@@ -62,7 +32,7 @@ if __name__ == '__main__':
     losses = []
     iter = []
     weights = np.ones(global_model.len()).reshape(-1, 1)
-
+    total_grad = 0
     # 划分客户端训练集
     partition_index = iid_partition(dataset.length(), client_number)
     for i in range(client_number):
