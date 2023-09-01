@@ -13,8 +13,12 @@ if __name__ == '__main__':
     start_time = time.time()
     args = args_parser()
 
+    # 在这里指定数据集，算法和步长
     dataset_name = 'mnist'
     algorithm_name = 'zeroth_grad'
+    eta = 0.1
+    # 如果是执行零阶优化算法，需要调整如下参数
+    alpha = 0.5
 
     # initialize
     if dataset_name == 'rcv':
@@ -23,9 +27,9 @@ if __name__ == '__main__':
         dataset, X, Y, global_model = get_mnist()
 
     if algorithm_name == 'zeroth_grad':
-        algorithm = Zeroth_grad(dataset, global_model)
+        algorithm = Zeroth_grad(dataset, global_model, eta)
     else:
-        algorithm = FedAvg(dataset, global_model)
+        algorithm = FedAvg(dataset, global_model, eta, alpha)
 
     client_index = []
     client_dataset = {}
@@ -44,8 +48,6 @@ if __name__ == '__main__':
         weights_list = []
         chosen_client_num = int(max(client_rate * client_number, 1))
         chosen_client = random.sample(client_index, chosen_client_num)
-
-        # print(i)
         # train
         for k in chosen_client:
             weight_of_client, total_grad = algorithm.update_client(weights, partition_index[k], i)
