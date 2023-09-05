@@ -7,59 +7,43 @@ import time
 import numpy as np
 from sampling import iid_partition, get_rcv1, get_mnist
 from options import args_parser
-from algorithm import client_number, iteration, client_rate, FedAvg, get_loss, Zeroth_grad
+from algorithm import FedAvg, get_loss, Zeroth_grad
+from utils import eta_class, parameter
+
+dataset_name = 'mnist'
+algorithm_name = 'zeroth_grad'
+
+grad_option = 1
+eta_list = eta_class()
+
 
 if __name__ == '__main__':
     start_time = time.time()
     args = args_parser()
 
-    # 在这里指定数据集，算法和步长
-    dataset_name = 'mnist'
-    algorithm_name = 'zeroth_grad'
     eta = 0.1
-    # 如果是执行零阶优化算法，需要调整如下参数
     alpha = 0.5
+    memory_length = 5
+    batch_size = 64
+    verbose = True
 
     # initialize
+    eta_type = eta_list.choose(grad_option)
+    para = parameter(eta_type, eta, batch_size, alpha, memory_length, verbose)
+
     if dataset_name == 'rcv':
         dataset, X, Y, global_model = get_rcv1()
     else:
         dataset, X, Y, global_model = get_mnist()
 
     if algorithm_name == 'zeroth_grad':
-        algorithm = Zeroth_grad(dataset, global_model, eta)
+        algorithm = Zeroth_grad(dataset, global_model, para)
     else:
-        algorithm = FedAvg(dataset, global_model, eta, alpha)
+        algorithm = FedAvg(dataset, global_model, para)
 
-    client_index = []
-    client_dataset = {}
-    losses = []
-    iter = []
-    weights = np.ones(global_model.len()).reshape(-1, 1)
-    total_grad = 0
-    # 划分客户端训练集
-    partition_index = iid_partition(dataset.length(), client_number)
-    for i in range(client_number):
-        client_index.append(i)
-    # print(client_index)
+    algorithm.alg_run(start_time)
 
-    # Training
-    for i in range(iteration):
-        weights_list = []
-        chosen_client_num = int(max(client_rate * client_number, 1))
-        chosen_client = random.sample(client_index, chosen_client_num)
-        # train
-        for k in chosen_client:
-            weight_of_client, total_grad = algorithm.update_client(weights, partition_index[k], i)
-            weights_list.append(copy.deepcopy(weight_of_client))
-
-        weights = algorithm.average(weights_list)
-
-        if (i + 1) % 100 == 0:
-            iter.append(i + 1)
-            losses = get_loss(global_model, dataset, weights, i + 1, losses)
-
-    end_time = time.time()
-    print("total time is {:.3f}".format(end_time-start_time))
-    print("total grad times is {:.2f}".format(total_grad))
+    # end_time = time.time()
+    # print("total time is {:.3f}".format(end_time-start_time))
+    # print("total grad times is {:.2f}".format(total_grad))
 
