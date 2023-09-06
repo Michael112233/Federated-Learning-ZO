@@ -13,15 +13,13 @@ local_iteration = 20
 total_grad = 0
 iteration = 2000
 radius = 1e-6
-
-
 def get_loss(global_model, dataset, weights, current_round, losses, verbose):
     Xfull, Yfull = dataset.full()
     l = global_model.loss(weights, Xfull, Yfull)
-    acc = global_model.acc(weights, Xfull, Yfull)
+    # acc = global_model.acc(weights, Xfull, Yfull)
     if verbose:
-        print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(current_round, l, acc))
-    # print("After iteration {}: loss is {}".format(current_round, l))
+        # print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(current_round, l, acc))
+        print("After iteration {}: loss is {}".format(current_round, l))
 
     losses.append(l)
     return losses, l
@@ -38,6 +36,7 @@ class FedAvg:
         self.eta = option.eta
         self.batch_size = option.batch_size
         self.verbose = option.verbose
+        self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
         self.excel_solver.create_excel()
 
@@ -77,12 +76,15 @@ class FedAvg:
 
             weights = self.average(weights_list)
 
-            if (i + 1) % 100 == 0:
+            current_time = time.time()
+            if (self.total_grad >= self.max_grad_time) or ((i + 1) % 100 == 0):
                 iter.append(i + 1)
-                if self.verbose:
-                    losses = get_loss(self.global_model, self.dataset, weights, i + 1, losses)
-
+                losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
+                self.excel_solver.save_excel(current_time - start_time, self.total_grad, current_loss, i + 1)
+                if (self.total_grad >= self.max_grad_time):
+                    break
         end_info(start_time, self.total_grad)
+        return losses[-1]
 
 class Zeroth_grad:
     def __init__(self, dataset, global_model, option):
@@ -101,6 +103,7 @@ class Zeroth_grad:
         self.batch_size = option.batch_size
         self.memory_length = option.memory_length
         self.verbose = option.verbose
+        self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
         self.excel_solver.create_excel()
 
@@ -167,9 +170,13 @@ class Zeroth_grad:
             weights = self.average(weights_list)
             current_time = time.time()
 
-            if (i + 1) % 100 == 0:
+            current_time = time.time()
+            if (self.total_grad >= self.max_grad_time) or ((i + 1) % 100 == 0):
                 iter.append(i + 1)
                 losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
                 self.excel_solver.save_excel(current_time - start_time, self.total_grad, current_loss, i + 1)
+                if self.total_grad >= self.max_grad_time:
+                    break
 
         end_info(start_time, self.total_grad)
+        return losses[-1]

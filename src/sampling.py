@@ -51,7 +51,7 @@ def get_rcv1():
     X = hstack([X, bias_column_sparse])
     # 归一化特征向量
     X = normalize(X, axis=1, norm='l2')
-    dataset = data(X, Y, 0.7)
+    dataset = data(X, Y, 0.8)
     X = dataset.X_train
     Y = dataset.Y_train
     global_model = LRmodel_csr(X.shape[1])
@@ -66,7 +66,7 @@ def get_mnist():
     x = np.hstack((x, np.ones((x.shape[0], 1))))
     # 归一化特征向量
     x = normalize(x, axis=1, norm='l2')
-    dataset = data(x, y, 0.7)
+    dataset = data(x, y, 0.8)
     # 提取出训练集
     X = dataset.X_train
     Y = dataset.Y_train

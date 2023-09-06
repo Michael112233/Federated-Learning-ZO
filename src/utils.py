@@ -10,13 +10,14 @@ from openpyxl.workbook import Workbook
 
 
 class parameter:
-    def __init__(self, eta_type, eta, batch_size, alpha, memory_length, verbose):
+    def __init__(self, eta_type, eta, batch_size, alpha, memory_length, verbose, max_grad_time):
         self.eta_type = eta_type
         self.eta = eta
         self.alpha = alpha
         self.memory_length = memory_length
         self.verbose = verbose
         self.batch_size = batch_size
+        self.max_grad_time = max_grad_time
 
 class eta_class:
     def divide_eta(self, eta, iter, local_iter):
