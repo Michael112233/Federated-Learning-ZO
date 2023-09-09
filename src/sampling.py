@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Python version: 3.6
-
+import time
 
 import numpy as np
 from sklearn.preprocessing import normalize
@@ -28,10 +28,13 @@ class data:
         self.Y_test = self.Y[rand_idxs[N_train:]]
 
     def sample(self, chosen_index, batch_size=64):
+        start_time = time.time()
         # 随机选择一个小批量
         batch_indices = np.random.choice(chosen_index, batch_size, replace=True)
         X_batch = self.X_train[batch_indices]
         Y_batch = self.Y_train[batch_indices]
+        end_time = time.time()
+        print(end_time - start_time)
         return X_batch, Y_batch
 
     def full(self):

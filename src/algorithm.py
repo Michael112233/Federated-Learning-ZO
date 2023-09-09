@@ -7,12 +7,6 @@ import numpy as np
 from sampling import iid_partition
 from utils import end_info, excel_solver
 
-client_rate = 0.5
-client_number = 50
-local_iteration = 20
-total_grad = 0
-iteration = 2000
-radius = 1e-6
 def get_loss(global_model, dataset, weights, current_round, losses, verbose):
     Xfull, Yfull = dataset.full()
     l = global_model.loss(weights, Xfull, Yfull)
@@ -27,24 +21,31 @@ def get_loss(global_model, dataset, weights, current_round, losses, verbose):
 
 class FedAvg:
     def __init__(self, dataset, global_model, option):
+        self.client_rate = option.client_rate
+        self.client_number = option.client_number
+        self.local_iteration = option.local_iteration
+        self.iteration = option.iteration
         self.dataset = dataset
         self.global_model = global_model
         self.total_grad = 0
         self.evaluate_time = 1
         self.grad_method = option.eta_type
-        self.chosen_client_num = int(max(client_rate * client_number, 1))
+        self.chosen_client_num = int(max(self.client_rate * self.client_number, 1))
         self.eta = option.eta
         self.batch_size = option.batch_size
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.excel_solver.create_excel()
 
+        self.current_time = []
+        self.current_grad_times = []
+        self.current_loss = []
+        self.current_round = []
     def update_client(self, weights, chosen_index, current_round=0):
-        for i in range(local_iteration):
+        for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
             g = self.global_model.grad(weights, X, Y)
-            self.total_grad += self.evaluate_time * self.batch_size
+            self.total_grad += 1 * self.batch_size
             eta = self.grad_method(self.eta, current_round, i)
             weights -= eta * g
         return weights, self.total_grad
@@ -59,15 +60,15 @@ class FedAvg:
         iter = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
-        partition_index = iid_partition(self.dataset.length(), client_number)
-        for i in range(client_number):
+        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        for i in range(self.client_number):
             client_index.append(i)
         # print(client_index)
 
         # Training
-        for i in range(iteration):
+        for i in range(self.iteration):
             weights_list = []
-            chosen_client_num = int(max(client_rate * client_number, 1))
+            chosen_client_num = int(max(self.client_rate * self.client_number, 1))
             chosen_client = random.sample(client_index, chosen_client_num)
             # train
             for k in chosen_client:
@@ -77,12 +78,18 @@ class FedAvg:
             weights = self.average(weights_list)
 
             current_time = time.time()
-            if (self.total_grad >= self.max_grad_time) or ((i + 1) % 100 == 0):
+
+            if (i + 1) % 100 == 0:
                 iter.append(i + 1)
                 losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
-                self.excel_solver.save_excel(current_time - start_time, self.total_grad, current_loss, i + 1)
-                if (self.total_grad >= self.max_grad_time):
+                self.current_time.append(copy.deepcopy(current_time))
+                self.current_grad_times.append(self.total_grad)
+                self.current_loss.append(current_loss)
+                self.current_round.append(i + 1)
+                if self.total_grad >= self.max_grad_time:
                     break
+
+        self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
         end_info(start_time, self.total_grad)
         return losses[-1]
 
@@ -90,25 +97,34 @@ class Zeroth_grad:
     def __init__(self, dataset, global_model, option):
         self.dataset = dataset
         self.global_model = global_model
+        self.client_rate = option.client_rate
+        self.client_number = option.client_number
+        self.local_iteration = option.local_iteration
+        self.iteration = option.iteration
+        self.radius = option.radius
         self.total_grad = 0
         self.evaluate_time = 2
         self.delta_weight_list = []
-        self.chosen_client_num = int(max(client_rate * client_number, 1))
+        self.chosen_client_num = int(max(self.client_rate * self.client_number, 1))
         self.p_matrix = np.empty((global_model.len(), option.memory_length))
         self.this_weight = np.ones(global_model.len()).reshape(-1, 1)
         self.last_weight = self.this_weight
         self.eta = option.eta
         self.alpha = option.alpha
-        self.grad_method = option.eta_type
+        self.eta_type = option.eta_type
         self.batch_size = option.batch_size
         self.memory_length = option.memory_length
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.excel_solver.create_excel()
+        # self.excel_solver.create_excel()
+        self.current_time = []
+        self.current_grad_times = []
+        self.current_loss = []
+        self.current_round = []
 
     def update_client(self, weights, chosen_index, current_round):
-        for i in range(local_iteration):
+        for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
             # get matrix V（加一的目的是想让服务器生成完P矩阵后通过else的方法生成v矩阵）
             if current_round <= self.memory_length:
@@ -120,12 +136,12 @@ class Zeroth_grad:
                     self.alpha * self.global_model.len() / self.memory_length) * self.p_matrix.dot(
                     z1)
             # calculate gradient
-            upper_val = self.global_model.loss((weights + radius * v_matrix), X, Y)
-            lower_val = self.global_model.loss((weights - radius * v_matrix), X, Y)
-            g = (upper_val - lower_val) * (1 / (2 * radius)) * v_matrix
+            upper_val = self.global_model.loss((weights + self.radius * v_matrix), X, Y)
+            lower_val = self.global_model.loss((weights - self.radius * v_matrix), X, Y)
+            g = (upper_val - lower_val) * (1 / (2 * self.radius)) * v_matrix
             # 函数评估次数，需要每次乘上minibatch，在该算法中评估了两次，得出下式
-            self.total_grad += self.evaluate_time * self.batch_size
-            eta = self.grad_method(self.eta, current_round, i)
+            self.total_grad += 2 * self.batch_size
+            eta = self.eta_type(self.eta, current_round, i)
             weights -= eta * g
         return weights, self.total_grad
 
@@ -152,15 +168,15 @@ class Zeroth_grad:
         iter = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
-        partition_index = iid_partition(self.dataset.length(), client_number)
-        for i in range(client_number):
+        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        for i in range(self.client_number):
             client_index.append(i)
         # print(client_index)
 
         # Training
-        for i in range(iteration):
+        for i in range(self.iteration):
             weights_list = []
-            chosen_client_num = int(max(client_rate * client_number, 1))
+            chosen_client_num = int(max(self.client_rate * self.client_number, 1))
             chosen_client = random.sample(client_index, chosen_client_num)
             # train
             for k in chosen_client:
@@ -171,12 +187,17 @@ class Zeroth_grad:
             current_time = time.time()
 
             current_time = time.time()
-            if (self.total_grad >= self.max_grad_time) or ((i + 1) % 100 == 0):
+            if (i + 1) % 100 == 0:
                 iter.append(i + 1)
                 losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
-                self.excel_solver.save_excel(current_time - start_time, self.total_grad, current_loss, i + 1)
+                self.current_time.append(copy.deepcopy(current_time))
+                self.current_grad_times.append(self.total_grad)
+                self.current_loss.append(current_loss)
+                self.current_round.append(i + 1)
                 if self.total_grad >= self.max_grad_time:
                     break
+
+        self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
 
         end_info(start_time, self.total_grad)
         return losses[-1]

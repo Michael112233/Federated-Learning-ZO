@@ -20,7 +20,7 @@ class LRmodel:
         dw = (1 / len(X)) * np.dot(X.T, y_hat - Y)
         return dw
     def loss(self, w, X, Y):
-        y_hat = self.sigmoid(np.dot(X, w))
+        y_hat = np.minimum(1 - 1e-15, np.maximum(1e-15, self.sigmoid(np.dot(X, w))))
         # 计算损失函数
         loss = (-1 / len(X)) * np.sum(Y * np.log(y_hat) + (1 - Y) * np.log(1 - y_hat))
         return loss
@@ -40,7 +40,7 @@ class LRmodel_csr:
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
     def grad(self, w, X, Y):
-        y_hat = self.sigmoid(X.dot(w))
+        y_hat = np.minimum(1 - 1e-15, np.maximum(1e-15, self.sigmoid(np.dot(X, w))))
         # 计算梯度
         dw = (1 / len(Y)) * X.T.dot(y_hat - Y)
         return dw

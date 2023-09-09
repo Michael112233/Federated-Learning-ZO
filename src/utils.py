@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 # Python version: 3.6
 import math
-import os
+import csv
 import time
+
+import pandas as pd
 from openpyxl import workbook, worksheet
 from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
@@ -18,6 +20,13 @@ class parameter:
         self.verbose = verbose
         self.batch_size = batch_size
         self.max_grad_time = max_grad_time
+        self.client_rate = 0.5
+        self.client_number = 50
+        self.local_iteration = 20
+        self.total_grad = 0
+        self.iteration = 1000
+        self.radius = 1e-6
+
 
 class eta_class:
     def divide_eta(self, eta, iter, local_iter):
@@ -42,25 +51,18 @@ class eta_class:
 
 def end_info(start_time, total_grad):
     end_time = time.time()
-    print("total time is {:.3f}".format(end_time-start_time))
+    print("total time is {:.3f}".format(end_time - start_time))
     print("total grad times is {:.2f}".format(total_grad))
+
 
 class excel_solver:
     def __init__(self):
         file_path = "../performance/excel/"
-        file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".xlsx"
+        file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".csv"
         self.file_path = file_path + file_name
-    def create_excel(self):
-        my_workbook = Workbook()
-        my_worksheet = my_workbook.create_sheet('sheet1')
-        my_worksheet['A1'] = 'current_round'
-        my_worksheet['B1'] = 'current_grad_times'
-        my_worksheet['C1'] = 'current_time'
-        my_worksheet['D1'] = 'current_loss'
-        my_workbook.save(self.file_path)
 
     def save_excel(self, current_time, current_grad_times, current_loss, current_round):
-        my_workbook = load_workbook(self.file_path)
-        my_worksheet = my_workbook['sheet1']
-        my_worksheet.append([current_round, current_grad_times, current_time, current_loss])
-        my_workbook.save(self.file_path)
+        print(current_round)
+        dataframe = pd.DataFrame(
+            {'current_round': current_round, 'current_grad_times': current_grad_times, 'current_time': current_time, 'current_loss': current_loss})
+        dataframe.to_csv(self.file_path, index=True)
