@@ -1,9 +1,7 @@
 import copy
 import random
 import time
-
 import numpy as np
-
 from sampling import iid_partition
 from utils import end_info, excel_solver
 
@@ -44,9 +42,11 @@ class FedAvg:
     def update_client(self, weights, chosen_index, current_round=0):
         for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
+            # print(X, Y)
             g = self.global_model.grad(weights, X, Y)
             self.total_grad += 1 * self.batch_size
             eta = self.grad_method(self.eta, current_round, i)
+            # print(eta)
             weights -= eta * g
         return weights, self.total_grad
 
@@ -72,7 +72,8 @@ class FedAvg:
             chosen_client = random.sample(client_index, chosen_client_num)
             # train
             for k in chosen_client:
-                weight_of_client, self.total_grad = self.update_client(weights, partition_index[k], i)
+                weight_tmp = weights
+                weight_of_client, self.total_grad = self.update_client(weight_tmp, partition_index[k], i)
                 weights_list.append(copy.deepcopy(weight_of_client))
 
             weights = self.average(weights_list)
@@ -180,7 +181,8 @@ class Zeroth_grad:
             chosen_client = random.sample(client_index, chosen_client_num)
             # train
             for k in chosen_client:
-                weight_of_client, self.total_grad = self.update_client(weights, partition_index[k], i)
+                weight_tmp = weights
+                weight_of_client, self.total_grad = self.update_client(weight_tmp, partition_index[k], i)
                 weights_list.append(copy.deepcopy(weight_of_client))
 
             weights = self.average(weights_list)
@@ -199,5 +201,79 @@ class Zeroth_grad:
 
         self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
 
+        end_info(start_time, self.total_grad)
+        return losses[-1]
+
+class FedNewton:
+    def __init__(self, dataset, global_model, option):
+        self.client_rate = option.client_rate
+        self.client_number = option.client_number
+        self.local_iteration = option.local_iteration
+        self.iteration = option.iteration
+        self.dataset = dataset
+        self.global_model = global_model
+        self.total_grad = 0
+        self.evaluate_time = 1
+        self.grad_method = option.eta_type
+        self.chosen_client_num = int(max(self.client_rate * self.client_number, 1))
+        self.eta = option.eta
+        self.batch_size = option.batch_size
+        self.verbose = option.verbose
+        self.max_grad_time = option.max_grad_time
+        self.excel_solver = excel_solver()
+
+        self.current_time = []
+        self.current_grad_times = []
+        self.current_loss = []
+        self.current_round = []
+    def update_client(self, weights, chosen_index, current_round=0):
+        for i in range(self.local_iteration):
+            individual_model = self.global_model
+            X, Y = self.dataset.sample(chosen_index, self.batch_size)
+            individual_model.fit(X, Y, )
+            self.total_grad += 1 * self.batch_size
+        return weights, self.total_grad
+
+    def average(self, weights_list):
+        weights = sum(weights_list) / self.chosen_client_num
+        return weights
+
+    def alg_run(self, start_time):
+        client_index = []
+        losses = []
+        iter = []
+        weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        # 划分客户端训练集
+        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        for i in range(self.client_number):
+            client_index.append(i)
+        # print(client_index)
+
+        # Training
+        for i in range(self.iteration):
+            weights_list = []
+            chosen_client_num = int(max(self.client_rate * self.client_number, 1))
+            chosen_client = random.sample(client_index, chosen_client_num)
+            # train
+            for k in chosen_client:
+                weight_tmp = weights
+                weight_of_client, self.total_grad = self.update_client(weight_tmp, partition_index[k], i)
+                weights_list.append(copy.deepcopy(weight_of_client))
+
+            weights = self.average(weights_list)
+
+            current_time = time.time()
+
+            if (i + 1) % 100 == 0:
+                iter.append(i + 1)
+                losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
+                self.current_time.append(copy.deepcopy(current_time))
+                self.current_grad_times.append(self.total_grad)
+                self.current_loss.append(current_loss)
+                self.current_round.append(i + 1)
+                if self.total_grad >= self.max_grad_time:
+                    break
+
+        self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
         end_info(start_time, self.total_grad)
         return losses[-1]

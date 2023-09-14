@@ -6,16 +6,18 @@ import math
 import random
 import time
 import numpy as np
+from sklearn.linear_model import LogisticRegression
+
 from sampling import iid_partition, get_rcv1, get_mnist
 from options import args_parser
-from algorithm import FedAvg, get_loss, Zeroth_grad
+from algorithm import FedAvg, FedNewton, Zeroth_grad
 from utils import eta_class, parameter
 
 dataset_name = 'mnist'
-algorithm_name = 'zeroth_grad'
+algorithm_name = 'FedAvg'
 
 
-grad_option = 1
+grad_option = 2
 eta_list = eta_class()
 
 
@@ -23,25 +25,28 @@ if __name__ == '__main__':
     start_time = time.time()
     args = args_parser()
 
-    eta = 0.1
+    # initialize
+    eta = 2
     alpha = 0.5
     memory_length = 5
-    batch_size = 64
+    batch_size = 1000
     verbose = True
-    # initialize
     eta_type = eta_list.choose(grad_option)
 
+    # eta_chosen = [0.01, 0.1, 1, 10, 100]
+    # for eta in eta_chosen:
     if dataset_name == 'rcv':
         dataset, X, Y, global_model = get_rcv1()
     else:
         dataset, X, Y, global_model = get_mnist()
+    max_grad_time = 5000 * dataset.length()
 
-    max_grad_time = 50000 * dataset.length()
-    eta_chosen = []
-
-    para = parameter(eta_type, eta, batch_size, alpha, memory_length, verbose, max_grad_time)
+    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose)
     if algorithm_name == 'zeroth_grad':
         algorithm = Zeroth_grad(dataset, global_model, para)
+    elif algorithm_name == 'newton':
+        global_model = LogisticRegression()
+        algorithm = FedNewton(dataset, global_model, para)
     else:
         algorithm = FedAvg(dataset, global_model, para)
 

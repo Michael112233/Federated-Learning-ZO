@@ -34,7 +34,7 @@ class data:
         X_batch = self.X_train[batch_indices]
         Y_batch = self.Y_train[batch_indices]
         end_time = time.time()
-        print(end_time - start_time)
+        # print(end_time - start_time)
         return X_batch, Y_batch
 
     def full(self):
@@ -73,6 +73,7 @@ def get_mnist():
     # 提取出训练集
     X = dataset.X_train
     Y = dataset.Y_train
+    # print(X.shape)
     global_model = LRmodel(X.shape[1])
     return dataset, X, Y, global_model
 
