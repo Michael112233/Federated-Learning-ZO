@@ -3,6 +3,8 @@
 # Python version: 3.6
 
 import numpy as np
+import torch
+
 
 #logistic regression mnist
 class LRmodel:
@@ -51,3 +53,12 @@ class LRmodel_csr:
         return loss
     def len(self):
         return self.length
+
+class LRmodel_torch(torch.nn.Module):
+    def __init__(self, in_features):
+        super(LRmodel_torch, self).__init__()
+        self.linear = torch.nn.Linear(in_features, 1)
+
+    def forward(self, x):
+        y_pred = torch.sigmoid(self.linear(x))
+        return y_pred
