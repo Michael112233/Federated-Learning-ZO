@@ -5,10 +5,6 @@ import math
 import csv
 import time
 import pandas as pd
-from openpyxl import workbook, worksheet
-from openpyxl.reader.excel import load_workbook
-from openpyxl.workbook import Workbook
-
 
 class parameter:
     def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=64, verbose=True):

@@ -5,6 +5,7 @@ import torchvision.datasets as dsets
 
 from src import utils
 
+
 options = utils.parameter(2)
 batch_size = options.batch_size
 
@@ -24,7 +25,7 @@ class LogisticRegression(torch.nn.Module):
         return outputs
 
 batch_size = 100
-n_iters = 3000
+n_iters = 30000
 epochs = n_iters / (len(train_dataset) / batch_size)
 input_dim = 784
 output_dim = 10
@@ -33,6 +34,7 @@ lr_rate = 0.001
 model = LogisticRegression(input_dim, output_dim)
 
 criterion = torch.nn.CrossEntropyLoss() # 计算 softmax 分布之上的交叉熵损失
+optimizer = torch.optim.SGD(model.parameters(), lr=lr_rate)
 
 iter = 0
 for epoch in range(int(epochs)):
@@ -51,7 +53,7 @@ for epoch in range(int(epochs)):
             # 计算准确率
             correct = 0
             total = 0
-            for images, labels in test_loader:
+            for images, labels in train_loader:
                 images = Variable(images.view(-1, 28*28))
                 outputs = model(images)
                 _, predicted = torch.max(outputs.data, 1)
