@@ -2,7 +2,7 @@ import time
 
 from sampling import get_rcv1, get_mnist
 from algorithm import FedAvg, Zeroth_grad
-from utils import excel_solver, parameter, eta_class
+from utils import excel_solver, parameter, eta_class, mkdir
 
 eta_list = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
 alpha_list = [0.05 * i for i in range(1, 21)]
@@ -10,7 +10,7 @@ dataset_list = ['mnist', 'rcv']
 algorithm_list = ['FedAvg', 'zeroth']
 memory_length_list = [5, 10, 15, 20]
 times = 3
-verbose = False
+verbose = True
 
 eta_choose = eta_class()
 eta_type = eta_choose.choose(2)
@@ -22,7 +22,7 @@ for dataset_name in dataset_list:
         dataset, X, Y, global_model = get_mnist()
     max_grad_time = 5000 * dataset.length()
     batch_size = 1000
-
+    mkdir("../performance/params/{}".format(dataset_name))
     for alpha in alpha_list:
         for eta in eta_list:
             for memory_length in memory_length_list:
@@ -33,8 +33,13 @@ for dataset_name in dataset_list:
                     else:
                         algorithm = FedAvg(dataset, global_model, para)
 
+                    mkdir("../performance/params/{}/{}".format(dataset_name, algorithm_name))
+                    mkdir("../performance/params/{}/{}/alpha={:.2}".format(dataset_name, algorithm_name, alpha))
+                    mkdir("../performance/params/{}/{}/alpha={:.2}/eta={}".format(dataset_name, algorithm_name, alpha, eta))
+                    mkdir("../performance/params/{}/{}/alpha={:.2}/eta={}/memory_length={}".format(dataset_name, algorithm_name, alpha, eta, memory_length))
+
                     for i in range(times):
-                        filename = "../performance/params/" + dataset_name + "/{}/alpha={:.2}/eta={}/memory_length={}/({}).csv".format(algorithm_name, alpha, eta, memory_length,i+1)
+                        filename = "../performance/params/{}/{}/alpha={:.2}/eta={}/memory_length={}/({}).csv".format(dataset_name, algorithm_name, alpha, eta, memory_length,i+1)
                         csv_solver = excel_solver(filename)
 
                         start_time = time.time()

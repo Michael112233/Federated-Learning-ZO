@@ -3,6 +3,7 @@
 # Python version: 3.6
 import math
 import csv
+import os
 import time
 import pandas as pd
 
@@ -51,7 +52,7 @@ def end_info(start_time, total_grad):
 
 
 class excel_solver:
-    def __init__(self, file_path_import):
+    def __init__(self, file_path_import=""):
         file_path = "../performance/excel/"
         file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".csv"
         if file_path_import == "":
@@ -64,3 +65,9 @@ class excel_solver:
         dataframe = pd.DataFrame(
             {'current_round': current_round, 'current_grad_times': current_grad_times, 'current_time': current_time, 'current_loss': current_loss})
         dataframe.to_csv(self.file_path, index=True)
+
+def mkdir(path):
+    folder = os.path.exists(path)
+
+    if not folder:
+        os.makedirs(path)
