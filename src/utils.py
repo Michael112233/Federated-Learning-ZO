@@ -51,10 +51,13 @@ def end_info(start_time, total_grad):
 
 
 class excel_solver:
-    def __init__(self):
+    def __init__(self, file_path_import):
         file_path = "../performance/excel/"
         file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".csv"
-        self.file_path = file_path + file_name
+        if file_path_import == "":
+            self.file_path = file_path + file_name
+        else:
+            self.file_path = file_path_import
 
     def save_excel(self, current_time, current_grad_times, current_loss, current_round):
         # print(current_round)
