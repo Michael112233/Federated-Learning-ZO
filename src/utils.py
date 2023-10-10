@@ -7,17 +7,17 @@ import time
 import pandas as pd
 
 class parameter:
-    def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=64, verbose=True):
+    def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000, verbose=True):
         self.eta_type = eta_type
         self.eta = eta
         self.alpha = alpha
         self.memory_length = memory_length
         self.verbose = verbose
-        self.batch_size = batch_size
+        self.batch_size = 1000
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100
-        self.local_iteration = 20 # origin 500
+        self.local_iteration = 500 # origin 500
         self.total_grad = 0
         self.iteration = 4000
         self.radius = 1e-6

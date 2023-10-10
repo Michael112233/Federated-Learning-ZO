@@ -13,8 +13,8 @@ from options import args_parser
 from algorithm import FedAvg, FedNewton, Zeroth_grad
 from utils import eta_class, parameter
 
-dataset_name = 'mnist'
-algorithm_name = 'FedAvg'
+dataset_name = 'rcv'
+algorithm_name = 'zeroth_grad'
 
 
 grad_option = 2
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         dataset, X, Y, global_model = get_rcv1()
     else:
         dataset, X, Y, global_model = get_mnist()
-    max_grad_time = 5000 * dataset.length()
+    max_grad_time = 5000000 * dataset.length()
 
     para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose)
     if algorithm_name == 'zeroth_grad':
