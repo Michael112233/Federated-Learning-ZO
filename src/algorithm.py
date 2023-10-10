@@ -90,9 +90,9 @@ class FedAvg:
                 if self.total_grad >= self.max_grad_time:
                     break
 
-        self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
+        # self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
         end_info(start_time, self.total_grad)
-        return losses[-1]
+        return self.current_time, self.current_grad_times, self.current_loss, self.current_round
 
 class Zeroth_grad:
     def __init__(self, dataset, global_model, option):
@@ -199,10 +199,10 @@ class Zeroth_grad:
                 if self.total_grad >= self.max_grad_time:
                     break
 
-        self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
+        # self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
 
         end_info(start_time, self.total_grad)
-        return losses[-1]
+        return self.current_time, self.current_grad_times, self.current_loss, self.current_round
 
 class FedNewton:
     def __init__(self, dataset, global_model, option):
