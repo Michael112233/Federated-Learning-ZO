@@ -58,7 +58,7 @@ for dataset_name in dataset_list:
                     para = parameter(max_grad_time, eta_type, eta, 0, 0, batch_size, verbose)
                     algorithm = FedAvg(dataset, global_model, para)
                     get_result(filename, algorithm)
-            elif algorithm_name == 'zeroth_grad':
+            elif algorithm_name == 'zeroth':
                 for alpha in alpha_list:
                     for memory_length in memory_length_list:
                         for i in range(times):
