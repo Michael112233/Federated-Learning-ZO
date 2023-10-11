@@ -83,7 +83,7 @@ class FedAvg:
             if (i + 1) % 100 == 0:
                 iter.append(i + 1)
                 losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
-                self.current_time.append(copy.deepcopy(current_time))
+                self.current_time.append(copy.deepcopy(current_time-start_time))
                 self.current_grad_times.append(self.total_grad)
                 self.current_loss.append(current_loss)
                 self.current_round.append(i + 1)
@@ -192,7 +192,7 @@ class Zeroth_grad:
             if (i + 1) % 100 == 0:
                 iter.append(i + 1)
                 losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
-                self.current_time.append(copy.deepcopy(current_time))
+                self.current_time.append(copy.deepcopy(current_time-start_time))
                 self.current_grad_times.append(self.total_grad)
                 self.current_loss.append(current_loss)
                 self.current_round.append(i + 1)
