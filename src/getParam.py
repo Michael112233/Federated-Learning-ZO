@@ -10,6 +10,9 @@ def make_dir(dataset_name, algorithm_name, params):
     alpha = params.alpha
     memory_length = params.memory_length
 
+    mkdir("../performance")
+    mkdir("../performance/params")
+
     mkdir("../performance/params/{}/{}".format(dataset_name, algorithm_name))
     mkdir("../performance/params/{}/{}/eta={}".format(dataset_name, algorithm_name, eta))
     if algorithm_name == "zeroth":
@@ -56,6 +59,7 @@ for dataset_name in dataset_list:
                     filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
                         dataset_name, algorithm_name, eta, i + 1)
                     para = parameter(max_grad_time, eta_type, eta, 0, 0, batch_size, verbose)
+                    make_dir(dataset_name, algorithm_name, para)
                     algorithm = FedAvg(dataset, global_model, para)
                     get_result(filename, algorithm)
             elif algorithm_name == 'zeroth':
@@ -68,5 +72,6 @@ for dataset_name in dataset_list:
                                 eta, memory_length,
                                 i + 1)
                             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose)
+                            make_dir(dataset_name, algorithm_name, para)
                             algorithm = Zeroth_grad(dataset, global_model, para)
                             get_result(filename, algorithm)

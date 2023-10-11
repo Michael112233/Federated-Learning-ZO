@@ -10,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 
 from sampling import iid_partition, get_rcv1, get_mnist
 from options import args_parser
-from algorithm import FedAvg, FedNewton, Zeroth_grad
+from algorithm import FedAvg, Zeroth_grad
 from utils import eta_class, parameter
 
 dataset_name = 'rcv'
@@ -44,9 +44,6 @@ if __name__ == '__main__':
     para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose)
     if algorithm_name == 'zeroth_grad':
         algorithm = Zeroth_grad(dataset, global_model, para)
-    elif algorithm_name == 'newton':
-        global_model = LogisticRegression()
-        algorithm = FedNewton(dataset, global_model, para)
     else:
         algorithm = FedAvg(dataset, global_model, para)
 

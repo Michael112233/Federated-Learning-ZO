@@ -7,6 +7,7 @@ import os
 import time
 import pandas as pd
 
+# 参数类，用于传递超参数以及超参数集中化
 class parameter:
     def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000, verbose=True):
         self.eta_type = eta_type
@@ -23,7 +24,7 @@ class parameter:
         self.iteration = 4000
         self.radius = 1e-6
 
-
+# 规定了eta的计算方式
 class eta_class:
     def divide_eta(self, eta, iter, local_iter):
         return eta / ((iter + 1) * (local_iter + 1))
@@ -44,13 +45,13 @@ class eta_class:
         if option == 3:
             return self.divide_eta
 
-
+# 单次实验最终结果的输出
 def end_info(start_time, total_grad):
     end_time = time.time()
     print("total time is {:.3f}".format(end_time - start_time))
     print("total grad times is {:.2f}".format(total_grad))
 
-
+# 放置一些csv存储相关的代码
 class excel_solver:
     def __init__(self, file_path_import=""):
         file_path = "../performance/excel/"
@@ -66,6 +67,7 @@ class excel_solver:
             {'current_round': current_round, 'current_grad_times': current_grad_times, 'current_time': current_time, 'current_loss': current_loss})
         dataframe.to_csv(self.file_path, index=True)
 
+# 工作流调参步骤，用于新建文件夹
 def mkdir(path):
     folder = os.path.exists(path)
 
