@@ -39,14 +39,19 @@ class LRmodel_csr:
     def __init__(self, length):
         self.length = length
     def sigmoid(self, z):
+        # pos_max = np.argwhere(z > 80)
+        # pos_min = np.argwhere(z < -80)
+        # z[pos_max] = 80
+        # z[pos_min] = -80
         return 1 / (1 + np.exp(-z))
     def grad(self, w, X, Y):
-        y_hat = np.minimum(1 - 1e-15, np.maximum(1e-15, self.sigmoid(np.dot(X, w))))
+        y_hat = np.minimum(1 - 1e-15, np.maximum(1e-15, self.sigmoid(X.dot(w))))
         # 计算梯度
         dw = (1 / len(Y)) * X.T.dot(y_hat - Y)
         return dw
     def loss(self, w, X, Y):
-        y_hat = self.sigmoid(X.dot(w))
+        func1 = self.sigmoid(X.dot(w))
+        y_hat = np.minimum(1 - 1e-15, np.maximum(1e-15, self.sigmoid(X.dot(w))))
         # 计算损失函数
         loss = (-1 / len(Y)) * np.sum(Y * np.log(y_hat) + (1 - Y) * np.log(1 - y_hat))
         return loss

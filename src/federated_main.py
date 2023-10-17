@@ -41,7 +41,7 @@ if __name__ == '__main__':
         dataset, X, Y, global_model = get_mnist()
     max_grad_time = 5000000 * dataset.length()
 
-    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose)
+    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 1000, verbose)
     if algorithm_name == 'zeroth_grad':
         algorithm = Zeroth_grad(dataset, global_model, para)
     else:

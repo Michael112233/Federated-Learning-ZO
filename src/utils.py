@@ -9,13 +9,14 @@ import pandas as pd
 
 # 参数类，用于传递超参数以及超参数集中化
 class parameter:
-    def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000, verbose=True):
+    def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000, print_iteration=10, verbose=True):
         self.eta_type = eta_type
         self.eta = eta
         self.alpha = alpha
         self.memory_length = memory_length
         self.verbose = verbose
-        self.batch_size = 1000
+        self.batch_size = batch_size
+        self.print_iteration = print_iteration
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100

@@ -30,10 +30,12 @@ class FedAvg:
         self.grad_method = option.eta_type
         self.chosen_client_num = int(max(self.client_rate * self.client_number, 1))
         self.eta = option.eta
+        self.radius = option.radius
         self.batch_size = option.batch_size
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
+        self.print_iteration = option.print_iteration
 
         self.current_time = []
         self.current_grad_times = []
@@ -42,8 +44,10 @@ class FedAvg:
     def update_client(self, weights, chosen_index, current_round=0):
         for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
-            # print(X, Y)
-            g = self.global_model.grad(weights, X, Y)
+            v_matrix = np.random.randn(self.global_model.len(), 1)
+            upper_val = self.global_model.loss((weights + self.radius * v_matrix), X, Y)
+            lower_val = self.global_model.loss((weights - self.radius * v_matrix), X, Y)
+            g = (upper_val - lower_val) * (1 / (2 * self.radius)) * v_matrix
             self.total_grad += 1 * self.batch_size
             eta = self.grad_method(self.eta, current_round, i)
             # print(eta)
@@ -80,7 +84,7 @@ class FedAvg:
 
             current_time = time.time()
 
-            if (i + 1) % 100 == 0:
+            if (i + 1) % self.print_iteration == 0:
                 iter.append(i + 1)
                 losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
                 self.current_time.append(copy.deepcopy(current_time-start_time))
@@ -118,6 +122,7 @@ class Zeroth_grad:
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
+        self.print_iteration = option.print_iteration
         # self.excel_solver.create_excel()
         self.current_time = []
         self.current_grad_times = []
@@ -187,7 +192,7 @@ class Zeroth_grad:
 
             weights = self.average(weights_list)
             current_time = time.time()
-            if (i + 1) % 100 == 0:
+            if (i + 1) % self.print_iteration == 0:
                 iter.append(i + 1)
                 losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
                 self.current_time.append(copy.deepcopy(current_time-start_time))
