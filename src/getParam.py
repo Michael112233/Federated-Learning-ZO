@@ -34,9 +34,9 @@ def get_result(filename, algorithm):
 eta_list = [0.001, 0.01, 0.1, 1, 10]
 alpha_list = [0.5]
 # eta_list = [100]
-# dataset_list = ['mnist', 'rcv']
+dataset_list = ['mnist', 'rcv']
 algorithm_list = ['FedAvg', 'zeroth']
-dataset_list = ['rcv']
+# dataset_list = ['rcv']
 # algorithm_list = ['zeroth']
 memory_length_list = [5]
 times = 3
