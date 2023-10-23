@@ -14,7 +14,7 @@ from algorithm import FedAvg, Zeroth_grad
 from utils import eta_class, parameter
 
 dataset_name = 'rcv'
-algorithm_name = 'zeroth_grad'
+algorithm_name = 'mnist'
 
 
 grad_option = 2
@@ -33,8 +33,6 @@ if __name__ == '__main__':
     verbose = True
     eta_type = eta_list.choose(grad_option)
 
-    # eta_chosen = [0.01, 0.1, 1, 10, 100]
-    # for eta in eta_chosen:
     if dataset_name == 'rcv':
         dataset, X, Y, global_model = get_rcv1()
     else:

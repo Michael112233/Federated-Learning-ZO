@@ -1,5 +1,5 @@
 import time
-
+import os
 from sampling import get_rcv1, get_mnist
 from algorithm import FedAvg, Zeroth_grad
 from utils import excel_solver, parameter, eta_class, mkdir
@@ -46,45 +46,65 @@ batch_size = 1000
 eta_choose = eta_class()
 eta_type = eta_choose.choose(2)
 
-for dataset_name in dataset_list:
-    mkdir("../performance/params/{}".format(dataset_name))
-    for algorithm_name in algorithm_list:
-        for eta in eta_list:
-            # for dataset
-            if dataset_name == 'rcv':
-                dataset, X, Y, global_model = get_rcv1()
-            else:
-                dataset, X, Y, global_model = get_mnist()
-            max_grad_time = 300 * dataset.length()
 
-            # for algorithm
-            if algorithm_name == 'FedAvg':
-                for i in range(times):
-                    filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
-                        dataset_name, algorithm_name, eta, i + 1)
-                    print(filename)
-                    if dataset_name == "mnist":
-                        para = parameter(max_grad_time, eta_type, eta, 0, 0, 1000, 10, verbose)
-                    else:
-                        para = parameter(max_grad_time, eta_type, eta, 0, 0, 1000, 100, verbose)
-                    make_dir(dataset_name, algorithm_name, para)
-                    algorithm = FedAvg(dataset, global_model, para)
-                    get_result(filename, algorithm)
-            elif algorithm_name == 'zeroth':
-                for alpha in alpha_list:
-                    for memory_length in memory_length_list:
+def generate_csv():
+    for dataset_name in dataset_list:
+        mkdir("../performance/params/{}".format(dataset_name))
+        for algorithm_name in algorithm_list:
+            for eta in eta_list:
+                # for dataset
+                if dataset_name == 'rcv':
+                    dataset, X, Y, global_model = get_rcv1()
+                else:
+                    dataset, X, Y, global_model = get_mnist()
+                max_grad_time = 300 * dataset.length()
 
-                        for i in range(times):
-                            filename = "../performance/params/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
-                                dataset_name,
-                                algorithm_name, eta, alpha,
-                                memory_length,
-                                i + 1)
-                            if dataset_name == "mnist":
-                                para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 10, verbose)
-                            else:
-                                para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 100, verbose)
-                            make_dir(dataset_name, algorithm_name, para)
-                            print(filename)
-                            algorithm = Zeroth_grad(dataset, global_model, para)
-                            get_result(filename, algorithm)
+                # for algorithm
+                if algorithm_name == 'FedAvg':
+                    for i in range(times):
+                        filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
+                            dataset_name, algorithm_name, eta, i + 1)
+                        print(filename)
+                        if dataset_name == "mnist":
+                            para = parameter(max_grad_time, eta_type, eta, 0, 0, 1000, 10, verbose)
+                        else:
+                            para = parameter(max_grad_time, eta_type, eta, 0, 0, 1000, 100, verbose)
+                        make_dir(dataset_name, algorithm_name, para)
+                        algorithm = FedAvg(dataset, global_model, para)
+                        get_result(filename, algorithm)
+                elif algorithm_name == 'zeroth':
+                    for alpha in alpha_list:
+                        for memory_length in memory_length_list:
+
+                            for i in range(times):
+                                filename = "../performance/params/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
+                                    dataset_name,
+                                    algorithm_name, eta, alpha,
+                                    memory_length,
+                                    i + 1)
+                                if dataset_name == "mnist":
+                                    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 10,
+                                                     verbose)
+                                else:
+                                    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 100,
+                                                     verbose)
+                                make_dir(dataset_name, algorithm_name, para)
+                                print(filename)
+                                algorithm = Zeroth_grad(dataset, global_model, para)
+                                get_result(filename, algorithm)
+
+
+def summary_csv():
+    print("----")
+    for dataset_name in dataset_list:
+        for algorithm_name in algorithm_list:
+            for eta in eta_list:
+                g = os.walk(r"../performance/params/{}/{}/eta={}".format(dataset_name,
+                                                                         algorithm_name, eta))
+                for path, dir_list, file_list in g:
+                    for file_name in file_list:
+                        print(os.path.join(path, file_name))
+
+
+
+summary_csv()
