@@ -9,7 +9,7 @@ from scipy.sparse import hstack, csr_matrix
 from sklearn.datasets import load_svmlight_file
 import scipy.io as sio
 
-from models import LRmodel_csr, LRmodel
+from models import LRmodel
 
 
 class data:
@@ -57,7 +57,7 @@ def get_rcv1():
     dataset = data(X, Y, 0.8)
     X = dataset.X_train
     Y = dataset.Y_train
-    global_model = LRmodel_csr(X.shape[1])
+    global_model = LRmodel(X.shape[1], True)
     return dataset, X, Y, global_model
 
 def get_mnist():
