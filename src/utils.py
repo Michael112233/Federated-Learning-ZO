@@ -68,6 +68,12 @@ class excel_solver:
             {'current_round': current_round, 'current_grad_times': current_grad_times, 'current_time': current_time, 'current_loss': current_loss})
         dataframe.to_csv(self.file_path, index=True)
 
+    def save_best_param(self, algorithm, dataset, best_eta, best_loss):
+        dataframe = pd.DataFrame(
+            {'algorithm': algorithm, 'dataset': dataset, 'best_eta': best_eta,
+             'best_loss': best_loss})
+        dataframe.to_csv(self.file_path, index=True)
+
 # 工作流调参步骤，用于新建文件夹
 def mkdir(path):
     folder = os.path.exists(path)

@@ -5,16 +5,13 @@ import numpy as np
 from sampling import iid_partition
 from utils import end_info, excel_solver
 
-def get_loss(global_model, dataset, weights, current_round, losses, verbose):
-    Xfull, Yfull = dataset.full()
-    l = global_model.loss(weights, Xfull, Yfull)
-    # acc = global_model.acc(weights, Xfull, Yfull)
-    if verbose:
-        # print("After iteration {}: loss is {} and accuracy is {:.2f}%".format(current_round, l, acc))
-        print("After iteration {}: loss is {}".format(current_round, l))
 
-    losses.append(l)
-    return losses, l
+def get_loss(global_model, dataset, weights, current_round, verbose):
+    Xfull, Yfull = dataset.full()
+    loss = global_model.loss(weights, Xfull, Yfull)
+    if verbose:
+        print("After iteration {}: loss is {}".format(current_round, loss))
+    return loss
 
 
 class FedAvg:
@@ -41,40 +38,47 @@ class FedAvg:
         self.current_grad_times = []
         self.current_loss = []
         self.current_round = []
+
+    def save_info(self, start_time, current_weights, current_round):
+        current_loss = get_loss(self.global_model, self.dataset, current_weights, current_round, self.verbose)
+        current_time = time.time()
+        self.current_time.append(copy.deepcopy(current_time - start_time))
+        self.current_grad_times.append(self.total_grad)
+        self.current_loss.append(current_loss)
+        self.current_round.append(current_round)
+
     def update_client(self, weights, chosen_index, current_round=0):
         for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
+            # calculate gradient
             v_matrix = np.random.randn(self.global_model.len(), 1)
             upper_val = self.global_model.loss((weights + self.radius * v_matrix), X, Y)
             lower_val = self.global_model.loss((weights - self.radius * v_matrix), X, Y)
             g = (upper_val - lower_val) * (1 / (2 * self.radius)) * v_matrix
             self.total_grad += 1 * self.batch_size
             eta = self.grad_method(self.eta, current_round, i)
-            # print(eta)
             weights -= eta * g
+            if self.total_grad >= self.max_grad_time:
+                break
         return weights, self.total_grad
 
     def average(self, weights_list):
-        weights = sum(weights_list) / self.chosen_client_num
+        weights = sum(weights_list) / len(weights_list)
         return weights
 
     def alg_run(self, start_time):
         client_index = []
-        losses = []
-        iter = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
         partition_index = iid_partition(self.dataset.length(), self.client_number)
         for i in range(self.client_number):
             client_index.append(i)
-        # print(client_index)
-
         # Training
         for i in range(self.iteration):
             weights_list = []
             chosen_client_num = int(max(self.client_rate * self.client_number, 1))
             chosen_client = random.sample(client_index, chosen_client_num)
-            # train
+
             for k in chosen_client:
                 weight_tmp = weights
                 weight_of_client, self.total_grad = self.update_client(weight_tmp, partition_index[k], i)
@@ -82,21 +86,30 @@ class FedAvg:
 
             weights = self.average(weights_list)
 
-            current_time = time.time()
-
-            if (i + 1) % self.print_iteration == 0:
-                iter.append(i + 1)
-                losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
-                self.current_time.append(copy.deepcopy(current_time-start_time))
-                self.current_grad_times.append(self.total_grad)
-                self.current_loss.append(current_loss)
-                self.current_round.append(i + 1)
+            if self.total_grad >= self.max_grad_time or (i + 1) % self.print_iteration == 0:
+                self.save_info(start_time, weights, i+1)
                 if self.total_grad >= self.max_grad_time:
                     break
 
-        # self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class Zeroth_grad:
     def __init__(self, dataset, global_model, option):
@@ -129,6 +142,14 @@ class Zeroth_grad:
         self.current_loss = []
         self.current_round = []
 
+    def save_info(self, start_time, current_weights, current_round):
+        current_loss = get_loss(self.global_model, self.dataset, current_weights, current_round, self.verbose)
+        current_time = time.time()
+        self.current_time.append(copy.deepcopy(current_time - start_time))
+        self.current_grad_times.append(self.total_grad)
+        self.current_loss.append(current_loss)
+        self.current_round.append(current_round)
+
     def update_client(self, weights, chosen_index, current_round):
         for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
@@ -149,13 +170,15 @@ class Zeroth_grad:
             self.total_grad += 2 * self.batch_size
             eta = self.eta_type(self.eta, current_round, i)
             weights -= eta * g
+            if self.total_grad >= self.max_grad_time:
+                break
+
         return weights, self.total_grad
 
     def average(self, weights_list):
-        weights = sum(weights_list) / self.chosen_client_num
+        weights = sum(weights_list) / len(weights_list)
         self.this_weight = weights
         self.delta_weight_list.append(copy.deepcopy(self.this_weight - self.last_weight))
-        # print(self.delta_weight_list.shape)
         self.last_weight = self.this_weight
 
         if len(self.delta_weight_list) % self.memory_length == 0:
@@ -170,8 +193,6 @@ class Zeroth_grad:
 
     def alg_run(self, start_time):
         client_index = []
-        losses = []
-        iter = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
         partition_index = iid_partition(self.dataset.length(), self.client_number)
@@ -191,19 +212,10 @@ class Zeroth_grad:
                 weights_list.append(copy.deepcopy(weight_of_client))
 
             weights = self.average(weights_list)
-            current_time = time.time()
-            if (i + 1) % self.print_iteration == 0:
-                iter.append(i + 1)
-                losses, current_loss = get_loss(self.global_model, self.dataset, weights, i + 1, losses, self.verbose)
-                self.current_time.append(copy.deepcopy(current_time-start_time))
-                self.current_grad_times.append(self.total_grad)
-                self.current_loss.append(current_loss)
-                self.current_round.append(i + 1)
+            if self.total_grad >= self.max_grad_time or (i + 1) % self.print_iteration == 0:
+                self.save_info(start_time, weights, i + 1)
                 if self.total_grad >= self.max_grad_time:
                     break
 
-        # self.excel_solver.save_excel(self.current_time, self.current_grad_times, self.current_loss, self.current_round)
-
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
-

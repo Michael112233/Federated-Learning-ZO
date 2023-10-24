@@ -10,8 +10,8 @@ from sampling import get_rcv1, get_mnist
 from algorithm import FedAvg, Zeroth_grad
 from utils import excel_solver, parameter, eta_class, mkdir
 
-current_dataset_list = []
-current_algorithm_list = []
+current_dataset_name_list = []
+current_algorithm_name_list = []
 current_best_eta_list = []
 current_best_loss_list = []
 
@@ -106,49 +106,6 @@ def get_params():
 
     end_time = time.time()
     print("Time is {}s".format(end_time-start_time))
-    # for dataset_name in dataset_list:
-    #     mkdir("../performance/params/{}".format(dataset_name))
-    #     for algorithm_name in algorithm_list:
-    #         for eta in eta_list:
-    #             # for dataset
-    #             if dataset_name == 'rcv':
-    #                 dataset, X, Y, global_model = get_rcv1()
-    #             else:
-    #                 dataset, X, Y, global_model = get_mnist()
-    #             max_grad_time = 300 * dataset.length()
-    #
-    #             # for algorithm
-    #             if algorithm_name == 'FedAvg':
-    #                 for i in range(times):
-    #                     filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
-    #                         dataset_name, algorithm_name, eta, i + 1)
-    #                     print(filename)
-    #                     if dataset_name == "mnist":
-    #                         para = parameter(max_grad_time, eta_type, eta, 0, 0, 1000, 10, verbose)
-    #                     else:
-    #                         para = parameter(max_grad_time, eta_type, eta, 0, 0, 1000, 100, verbose)
-    #                     make_dir(dataset_name, algorithm_name, para)
-    #                     algorithm = FedAvg(dataset, global_model, para)
-    #                     get_result(filename, algorithm)
-    #             elif algorithm_name == 'zeroth':
-    #
-    #                 for i in range(times):
-    #                     filename = "../performance/params/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
-    #                         dataset_name,
-    #                         algorithm_name, eta, alpha,
-    #                         memory_length,
-    #                         i + 1)
-    #                     if dataset_name == "mnist":
-    #                         para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 10,
-    #                                          verbose)
-    #                     else:
-    #                         para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 100,
-    #                                          verbose)
-    #                     make_dir(dataset_name, algorithm_name, para)
-    #                     print(filename)
-    #                     algorithm = Zeroth_grad(dataset, global_model, para)
-    #                     get_result(filename, algorithm)
-
 
 def summary_csv():
     print("----")
@@ -180,7 +137,13 @@ def summary_csv():
             current_best_eta_list.append(copy.deepcopy(best_eta))
             current_best_loss_list.append(copy.deepcopy(best_loss))
             current_dataset_name_list.append(copy.deepcopy(dataset_name))
-            current_algorithm_name_list.append(copy.deepcopy(algorithm))
+            current_algorithm_name_list.append(copy.deepcopy(algorithm_name))
+
+def sum_up_param():
+    mkdir("../parformance/sum_up")
+    mkdir("../parformance/sum_up/eta")
+    solver = excel_solver(file_path_import="../performance/sum_up/eta/eta_info.csv")
+    solver.save_best_param(current_algorithm_name_list, current_dataset_name_list, current_best_eta_list, current_best_loss_list)
 
 if __name__ == '__main__':
     freeze_support()
