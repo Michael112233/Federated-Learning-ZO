@@ -11,11 +11,11 @@ from sklearn.linear_model import LogisticRegression
 from sampling import iid_partition, get_rcv1, get_mnist
 from options import args_parser
 from algorithm import FedAvg, Zeroth_grad
-from utils import eta_class, parameter
+from utils import eta_class, parameter, make_dir, excel_solver
 
 dataset_name = 'rcv'
-algorithm_name = 'zeroth_grad'
-
+algorithm_name = 'FedAvg'
+dir_mode = 1        # means "performance/experiment"
 
 grad_option = 2
 eta_list = eta_class()
@@ -26,7 +26,10 @@ if __name__ == '__main__':
     args = args_parser()
 
     # initialize
-    eta = 2
+    if dataset_name == 'rcv' and algorithm_name == 'zeroth':
+        eta = 10
+    else:
+        eta = 1      # if dataset_name == 'mnist'
     alpha = 0.5
     memory_length = 5
     batch_size = 1000
@@ -35,18 +38,27 @@ if __name__ == '__main__':
 
     if dataset_name == 'rcv':
         dataset, X, Y, global_model = get_rcv1()
+        print_iteration = 100
     else:
         dataset, X, Y, global_model = get_mnist()
-    max_grad_time = 5000000 * dataset.length()
+        print_iteration = 50
+    max_grad_time = 10000 * dataset.length()
 
-    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 100, verbose)
+    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, print_iteration, verbose)
+    make_dir(dataset_name, algorithm_name, para, dir_mode)
     if algorithm_name == 'zeroth_grad':
         algorithm = Zeroth_grad(dataset, global_model, para)
+        filename = "../performance/experiment/{}/{}/eta={}/(time={}).csv".format(
+            dataset_name, algorithm_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
     else:
         algorithm = FedAvg(dataset, global_model, para)
+        filename = "../performance/params/{}/{}/eta={}/(time={}).csv".format(
+            dataset_name, algorithm_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
 
-    loss = algorithm.alg_run(start_time)
-    print("The loss is {} and The eta is {}".format(loss, eta))
+    csv_solver = excel_solver(filename)
+    current_time, current_grad_times, current_loss, current_round = algorithm.alg_run(start_time)
+    print("The loss is {} and The eta is {}".format(current_loss[-1], eta))
+    csv_solver.save_excel(current_time, current_grad_times, current_loss, current_round)
     # end_time = time.time()
     # print("total time is {:.3f}".format(end_time-start_time))
     # print("total grad times is {:.2f}".format(total_grad))

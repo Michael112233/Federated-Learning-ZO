@@ -7,9 +7,11 @@ import os
 import time
 import pandas as pd
 
+
 # 参数类，用于传递超参数以及超参数集中化
 class parameter:
-    def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000, print_iteration=10, verbose=True):
+    def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000,
+                 print_iteration=10, verbose=True):
         self.eta_type = eta_type
         self.eta = eta
         self.alpha = alpha
@@ -20,10 +22,11 @@ class parameter:
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100
-        self.local_iteration = 20 # origin 500
+        self.local_iteration = 100  # origin 500
         self.total_grad = 0
-        self.iteration = 4000
+        self.iteration = 400000
         self.radius = 1e-6
+
 
 # 规定了eta的计算方式
 class eta_class:
@@ -46,11 +49,13 @@ class eta_class:
         if option == 3:
             return self.divide_eta
 
+
 # 单次实验最终结果的输出
 def end_info(start_time, total_grad):
     end_time = time.time()
     print("total time is {:.3f}".format(end_time - start_time))
     print("total grad times is {:.2f}".format(total_grad))
+
 
 # 放置一些csv存储相关的代码
 class excel_solver:
@@ -65,7 +70,8 @@ class excel_solver:
     def save_excel(self, current_time, current_grad_times, current_loss, current_round):
         # print(current_round)
         dataframe = pd.DataFrame(
-            {'current_round': current_round, 'current_grad_times': current_grad_times, 'current_time': current_time, 'current_loss': current_loss})
+            {'current_round': current_round, 'current_grad_times': current_grad_times, 'current_time': current_time,
+             'current_loss': current_loss})
         dataframe.to_csv(self.file_path, index=True)
 
     def save_best_param(self, algorithm, dataset, best_eta, best_loss):
@@ -74,9 +80,37 @@ class excel_solver:
              'best_loss': best_loss})
         dataframe.to_csv(self.file_path, index=True)
 
+
 # 工作流调参步骤，用于新建文件夹
 def mkdir(path):
     folder = os.path.exists(path)
 
     if not folder:
         os.makedirs(path)
+
+
+# mode = 1 -> experiment
+# mode = 0 -> get params
+def make_dir(dataset_name, algorithm_name, params, mode):
+    eta = params.eta
+    alpha = params.alpha
+    memory_length = params.memory_length
+    dir_name = ""
+    if mode == 0:
+        dir_name = "params"
+    elif mode == 1:
+        dir_name = "experiment"
+    else:
+        return
+
+    mkdir("../performance")
+    mkdir("../performance/{}".format(dir_name))
+
+    mkdir("../performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
+    mkdir("../performance/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, eta))
+    if algorithm_name == "zeroth":
+        # print(alpha)
+        mkdir("../performance/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, eta, alpha))
+        mkdir(
+            "../performance/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name, algorithm_name,
+                                                                                 eta, alpha, memory_length))
