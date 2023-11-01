@@ -26,11 +26,13 @@ def get_result(filename, algorithm):
     csv_solver.save_excel(current_time, current_grad_times, current_loss, current_round)
 
 
-eta_list = [0.001, 0.01, 0.1, 1, 10, 20]
+eta_list = [0.01, 0.1, 1, 10]
+# eta_list = [1]
 alpha = 0.5
-dataset_list = ['mnist', 'rcv']
+dataset_list = ['rcv']
+# algorithm_list = ['FedAvg']
 algorithm_list = ['FedAvg', 'zeroth']
-memory_length = 5
+memory_length = 20
 times_list = range(1, 4)
 verbose = True
 batch_size = 1000

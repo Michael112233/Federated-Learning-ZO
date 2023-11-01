@@ -42,7 +42,7 @@ if __name__ == '__main__':
     else:
         dataset, X, Y, global_model = get_mnist()
         print_iteration = 50
-    max_grad_time = 10000 * dataset.length()
+    max_grad_time = 5000 * dataset.length()
 
     para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, print_iteration, verbose)
     make_dir(dataset_name, algorithm_name, para, dir_mode)

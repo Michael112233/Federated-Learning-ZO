@@ -56,7 +56,7 @@ class FedAvg:
             lower_val = self.global_model.loss((weights - self.radius * v_matrix), X, Y)
             g = (upper_val - lower_val) * (1 / (2 * self.radius)) * v_matrix
             self.total_grad += 1 * self.batch_size
-            eta = self.grad_method(self.eta, current_round, i)
+            eta = self.grad_method(self.eta, current_round)
             weights -= eta * g
             if self.total_grad >= self.max_grad_time:
                 break
@@ -75,21 +75,22 @@ class FedAvg:
             client_index.append(i)
         # Training
         for i in range(self.iteration):
-            weights_list = []
-            chosen_client_num = int(max(self.client_rate * self.client_number, 1))
-            chosen_client = random.sample(client_index, chosen_client_num)
-
-            for k in chosen_client:
-                weight_tmp = weights
-                weight_of_client, self.total_grad = self.update_client(weight_tmp, partition_index[k], i)
-                weights_list.append(copy.deepcopy(weight_of_client))
-
-            weights = self.average(weights_list)
-
+            # judge FEs >= maxFEs?
             if self.total_grad >= self.max_grad_time or (i + 1) % self.print_iteration == 0:
                 self.save_info(start_time, weights, i+1)
                 if self.total_grad >= self.max_grad_time:
                     break
+            weights_list = []
+            # draw a client set
+            chosen_client_num = int(max(self.client_rate * self.client_number, 1))
+            chosen_client = random.sample(client_index, chosen_client_num)
+
+            for k in chosen_client:
+                weight_tmp = copy.deepcopy(weights)
+                weight_of_client, self.total_grad = self.update_client(weight_tmp, partition_index[k], i)
+                weights_list.append(copy.deepcopy(weight_of_client))
+
+            weights = self.average(weights_list)
 
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
@@ -194,6 +195,7 @@ class Zeroth_grad:
     def alg_run(self, start_time):
         client_index = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        self.save_info(start_time, weights, 0)
         # 划分客户端训练集
         partition_index = iid_partition(self.dataset.length(), self.client_number)
         for i in range(self.client_number):
@@ -207,7 +209,7 @@ class Zeroth_grad:
             chosen_client = random.sample(client_index, chosen_client_num)
             # train
             for k in chosen_client:
-                weight_tmp = weights
+                weight_tmp = copy.deepcopy(weights)
                 weight_of_client, self.total_grad = self.update_client(weight_tmp, partition_index[k], i)
                 weights_list.append(copy.deepcopy(weight_of_client))
 
