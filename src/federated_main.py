@@ -26,10 +26,10 @@ if __name__ == '__main__':
     args = args_parser()
 
     # initialize
-    if dataset_name == 'rcv' and algorithm_name == 'zeroth_grad':
-        eta = 10
+    if dataset_name == 'rcv':
+        eta = 25
     else:
-        eta = 1      # if dataset_name == 'mnist'
+        eta = 10  # if dataset_name == 'mnist'
     alpha = 0.5
     memory_length = 5
     batch_size = 1000
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     else:
         dataset, X, Y, global_model = get_mnist()
         print_iteration = 50
-    max_grad_time = 5000 * dataset.length()
+    max_grad_time = 10000 * dataset.length()
 
     para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, print_iteration, verbose)
     make_dir(dataset_name, algorithm_name, para, dir_mode)

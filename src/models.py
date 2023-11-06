@@ -12,8 +12,8 @@ class LRmodel:
         self.isSparse = isSparse
 
     def sigmoid(self, z):
-        np.where(z > 80, 80, z)
-        np.where(z < -80, -80, z)
+        z = np.where(z > 80, 80, z)
+        z = np.where(z < -80, -80, z)
         return 1 / (1 + np.exp(-z))
 
     def predict(self, w, X, Y):

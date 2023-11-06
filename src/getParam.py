@@ -26,13 +26,13 @@ def get_result(filename, algorithm):
     csv_solver.save_excel(current_time, current_grad_times, current_loss, current_round)
 
 
-eta_list = [0.01, 0.1, 1, 10]
+eta_list = [0.01, 0.1, 1, 10, 20, 25, 30]
 # eta_list = [1]
 alpha = 0.5
 dataset_list = ['rcv']
 # algorithm_list = ['FedAvg']
 algorithm_list = ['FedAvg', 'zeroth']
-memory_length = 20
+memory_length = 5
 times_list = range(1, 4)
 verbose = True
 batch_size = 1000
@@ -46,11 +46,11 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         dataset, X, Y, global_model = get_rcv1()
     else:
         dataset, X, Y, global_model = get_mnist()
-    max_grad_time = 500 * dataset.length()
+    max_grad_time = 300 * dataset.length()
 
     # for algorithm
     if algorithm_name == 'FedAvg':
-        filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
+        filename = "./performance/params/{}/{}/eta={}/({}).csv".format(
             dataset_name, algorithm_name, eta, times)
         print(filename)
         if dataset_name == "mnist":
@@ -61,7 +61,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         algorithm = FedAvg(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'zeroth':
-        filename = "../performance/params/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
+        filename = "./performance/params/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
             dataset_name,
             algorithm_name, eta, alpha,
             memory_length,
@@ -102,10 +102,7 @@ def summary_csv():
             best_loss = 100
             best_eta = -1
             for eta in eta_list:
-                if eta == 20:
-                    if not (dataset_name == "rcv" and algorithm_name == "zeroth"):
-                        continue
-                g = os.walk(r"../performance/params/{}/{}/eta={}".format(dataset_name,
+                g = os.walk(r"./performance/params/{}/{}/eta={}".format(dataset_name,
                                                                          algorithm_name, eta))
                 current_loss_list = []
                 for path, dir_list, file_list in g:
@@ -129,9 +126,9 @@ def summary_csv():
 
 
 def sum_up_param():
-    mkdir("../performance/sum_up")
-    mkdir("../performance/sum_up/eta")
-    solver = excel_solver(file_path_import="../performance/sum_up/eta/eta_info.csv")
+    mkdir("./performance/sum_up")
+    mkdir("./performance/sum_up/eta")
+    solver = excel_solver(file_path_import="./performance/sum_up/eta/eta_info.csv")
     solver.save_best_param(current_algorithm_name_list, current_dataset_name_list, current_best_eta_list,
                            current_best_loss_list)
 

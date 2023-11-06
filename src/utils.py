@@ -22,7 +22,7 @@ class parameter:
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100
-        self.local_iteration = 100  # origin 500
+        self.local_iteration = 50  # origin 500, 10
         self.total_grad = 0
         self.iteration = 400000
         self.radius = 1e-6
@@ -60,7 +60,7 @@ def end_info(start_time, total_grad):
 # 放置一些csv存储相关的代码
 class excel_solver:
     def __init__(self, file_path_import=""):
-        file_path = "../performance/excel/"
+        file_path = "./performance/excel/"
         file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".csv"
         if file_path_import == "":
             self.file_path = file_path + file_name
@@ -108,7 +108,7 @@ def make_dir(dataset_name, algorithm_name, params, mode):
 
     mkdir("../performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
     mkdir("../performance/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, eta))
-    if algorithm_name == "zeroth":
+    if algorithm_name == "zeroth" or algorithm_name == "zeroth_grad":
         # print(alpha)
         mkdir("../performance/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, eta, alpha))
         mkdir(
