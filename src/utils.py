@@ -22,7 +22,7 @@ class parameter:
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100
-        self.local_iteration = 50  # origin 500, 10
+        self.local_iteration = 10  # origin 500, 10
         self.total_grad = 0
         self.iteration = 400000
         self.radius = 1e-6
@@ -60,7 +60,7 @@ def end_info(start_time, total_grad):
 # 放置一些csv存储相关的代码
 class excel_solver:
     def __init__(self, file_path_import=""):
-        file_path = "./performance/excel/"
+        file_path = "../performance/excel/"
         file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".csv"
         if file_path_import == "":
             self.file_path = file_path + file_name
