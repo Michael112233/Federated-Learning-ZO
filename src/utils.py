@@ -22,7 +22,7 @@ class parameter:
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100
-        self.local_iteration = 10  # origin 500, 10
+        self.local_iteration = 50  # origin 500, 10
         self.total_grad = 0
         self.iteration = 400000
         self.radius = 1e-6

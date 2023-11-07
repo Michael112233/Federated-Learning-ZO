@@ -14,7 +14,7 @@ from algorithm import FedAvg, Zeroth_grad
 from utils import eta_class, parameter, make_dir, excel_solver
 
 dataset_name = 'rcv'
-algorithm_name = 'zeroth_grad' # zeroth_grad or FedAvg
+algorithm_name = 'FedAvg' # zeroth_grad or FedAvg
 dir_mode = 1        # means "performance/experiment"
 
 grad_option = 2
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     args = args_parser()
 
     # initialize
-    if dataset_name == 'rcv':
+    if dataset_name == 'rcv' and algorithm_name == 'zeroth_grad':
         eta = 25
     else:
         eta = 10  # if dataset_name == 'mnist'

@@ -36,6 +36,8 @@ times_list = range(1, 4)
 verbose = True
 batch_size = 1000
 
+max_grad_time_rcv = 162578000
+max_grad_time_mnist = 14400000
 eta_choose = eta_class()
 eta_type = eta_choose.choose(2)
 
@@ -101,9 +103,14 @@ def summary_csv():
             best_loss = 100
             best_eta = -1
             for eta in eta_list:
-                g = os.walk(r"../performance/params/{}/{}/eta={}".format(dataset_name,
+                if algorithm_name == "FedAvg":
+                    g = os.walk(r"../performance/params/{}/{}/eta={}".format(dataset_name,
                                                                          algorithm_name, eta))
+                else:
+                    g = os.walk(r"../performance/params/{}/{}/eta={}/alpha={}/memory_length={}".format(dataset_name,
+                                                                         algorithm_name, eta, alpha, memory_length))
                 current_loss_list = []
+                ans = 0
                 for path, dir_list, file_list in g:
                     for file_name in file_list:
                         csv_path = (os.path.join(path, file_name))
