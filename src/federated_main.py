@@ -10,11 +10,11 @@ from sklearn.linear_model import LogisticRegression
 
 from sampling import iid_partition, get_rcv1, get_mnist
 from options import args_parser
-from algorithm import FedAvg, Zeroth_grad
+from algorithm import FedAvg_SGD, Zeroth_grad, FedAvg_GD
 from utils import eta_class, parameter, make_dir, excel_solver
 
-dataset_name = 'rcv'
-algorithm_name = 'FedAvg' # zeroth_grad or FedAvg
+dataset_name = 'mnist'
+algorithm_name = 'FedAvg_SGD' # zeroth_grad or FedAvg_SGD or FedAvg_GD
 dir_mode = 1        # means "performance/experiment"
 
 grad_option = 2
@@ -32,7 +32,10 @@ if __name__ == '__main__':
         eta = 10  # if dataset_name == 'mnist'
     alpha = 0.5
     memory_length = 5
-    batch_size = 1000
+    if dataset_name == 'rcv':
+        batch_size = 1000
+    else:
+        batch_size = 64
     verbose = True
     eta_type = eta_list.choose(grad_option)
 
@@ -44,16 +47,15 @@ if __name__ == '__main__':
         print_iteration = 50
     max_grad_time = 10000 * dataset.length()
 
-    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, print_iteration, verbose)
+    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, print_iteration, verbose)
     make_dir(dataset_name, algorithm_name, para, dir_mode)
     if algorithm_name == 'zeroth_grad':
         algorithm = Zeroth_grad(dataset, global_model, para)
-        filename = "../performance/experiment/{}/{}/eta={}/(time={}).csv".format(
-            dataset_name, algorithm_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
+    elif algorithm_name == 'FedAvg_GD':
+        algorithm = FedAvg_GD(dataset, global_model, para)
     else:
-        algorithm = FedAvg(dataset, global_model, para)
-        filename = "../performance/experiment/{}/{}/eta={}/(time={}).csv".format(
-            dataset_name, algorithm_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
+        algorithm = FedAvg_SGD(dataset, global_model, para)
+    filename = "../performance/experiment/{}/{}/eta={}/(time={}).csv".format(dataset_name, algorithm_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
 
     csv_solver = excel_solver(filename)
     print(filename)

@@ -8,6 +8,21 @@ import time
 import pandas as pd
 
 
+def judge_whether_print(current_round):
+    if current_round <= 10:
+        return True
+    elif current_round <= 200:
+        return current_round % 10 == 0
+    elif current_round <= 500:
+        return current_round % 50 == 0
+    elif current_round <= 2000:
+        return current_round % 100 == 0
+    elif current_round <= 4000:
+        return current_round % 200 == 0
+    else:
+        return current_round % 500 == 0
+
+
 # 参数类，用于传递超参数以及超参数集中化
 class parameter:
     def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000,
@@ -22,10 +37,11 @@ class parameter:
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100
-        self.local_iteration = 50  # origin 500, 10
+        self.local_iteration = 200  # origin 500, 10
         self.total_grad = 0
         self.iteration = 400000
         self.radius = 1e-6
+
 
 
 # 规定了eta的计算方式
@@ -108,7 +124,7 @@ def make_dir(dataset_name, algorithm_name, params, mode):
 
     mkdir("../performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
     mkdir("../performance/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, eta))
-    if algorithm_name == "zeroth" or algorithm_name == "zeroth_grad":
+    if mode == 0 and (algorithm_name == "zeroth" or algorithm_name == "zeroth_grad"):
         # print(alpha)
         mkdir("../performance/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, eta, alpha))
         mkdir(

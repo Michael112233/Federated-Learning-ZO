@@ -7,7 +7,7 @@ import pandas as pd
 
 from multiprocessing import Pool, freeze_support
 from sampling import get_rcv1, get_mnist
-from algorithm import FedAvg, Zeroth_grad
+from algorithm import FedAvg_SGD, Zeroth_grad
 from utils import excel_solver, parameter, eta_class, mkdir, make_dir
 
 current_dataset_name_list = []
@@ -59,7 +59,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, 100, verbose)
         make_dir(dataset_name, algorithm_name, para, dir_mode)
-        algorithm = FedAvg(dataset, global_model, para)
+        algorithm = FedAvg_SGD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'zeroth':
         filename = "../performance/params/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(

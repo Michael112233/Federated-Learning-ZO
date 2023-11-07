@@ -3,7 +3,7 @@ import random
 import time
 import numpy as np
 from sampling import iid_partition
-from utils import end_info, excel_solver
+from utils import end_info, excel_solver, judge_whether_print
 
 
 def get_loss(global_model, dataset, weights, current_round, verbose):
@@ -13,8 +13,110 @@ def get_loss(global_model, dataset, weights, current_round, verbose):
         print("After iteration {}: loss is {}".format(current_round, loss))
     return loss
 
+class FedAvg_GD:
+    def __init__(self, dataset, global_model, option):
+        self.client_rate = option.client_rate
+        self.client_number = option.client_number
+        self.local_iteration = option.local_iteration
+        self.iteration = option.iteration
+        self.dataset = dataset
+        self.global_model = global_model
+        self.total_grad = 0
+        self.evaluate_time = 1
+        self.grad_method = option.eta_type
+        self.chosen_client_num = int(max(self.client_rate * self.client_number, 1))
+        self.eta = option.eta
+        self.radius = option.radius
+        self.batch_size = option.batch_size
+        self.verbose = option.verbose
+        self.max_grad_time = option.max_grad_time
+        self.excel_solver = excel_solver()
+        self.print_iteration = option.print_iteration
 
-class FedAvg:
+        self.current_time = []
+        self.current_grad_times = []
+        self.current_loss = []
+        self.current_round = []
+
+    def save_info(self, start_time, current_weights, current_round):
+        current_loss = get_loss(self.global_model, self.dataset, current_weights, current_round, self.verbose)
+        current_time = time.time()
+        self.current_time.append(copy.deepcopy(current_time - start_time))
+        self.current_grad_times.append(self.total_grad)
+        self.current_loss.append(current_loss)
+        self.current_round.append(current_round)
+
+    def update_client(self, current_weights, chosen_index, current_round=0):
+        for i in range(self.local_iteration):
+            X = self.dataset.X[chosen_index]
+            Y = self.dataset.Y[chosen_index]
+            # calculate gradient
+            v_matrix = np.random.randn(self.global_model.len(), 1)
+            upper_val = self.global_model.loss((current_weights + self.radius * v_matrix), X, Y)
+            lower_val = self.global_model.loss((current_weights - self.radius * v_matrix), X, Y)
+            # print(self.global_model.loss((weights), X, Y))
+            g = (upper_val - lower_val) * (1 / (2 * self.radius)) * v_matrix
+            # g = self.global_model.grad(weights, X, Y)
+            self.total_grad += 2 * len(chosen_index)
+            eta = self.grad_method(self.eta, current_round)
+            current_weights -= eta * g
+            if self.total_grad >= self.max_grad_time:
+                break
+        return current_weights
+
+    def average(self, weights_list):
+        new_weights = sum(weights_list) / len(weights_list)
+        # print(weights_list)
+        return new_weights
+
+    def alg_run(self, start_time):
+        client_index = []
+        weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        # 划分客户端训练集
+        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        for i in range(self.client_number):
+            client_index.append(i)
+
+        self.save_info(start_time, weights, 0)
+        # Training
+        for i in range(self.iteration):
+            # judge FEs >= maxFEs?
+            weights_list = []
+            # draw a client set
+            chosen_client_num = int(max(self.client_rate * self.client_number, 1))
+            chosen_client = random.sample(client_index, chosen_client_num)
+
+            for k in chosen_client:
+                weight_tmp = copy.deepcopy(weights)
+                # weight_tmp = weights
+                weight_of_client = self.update_client(weight_tmp, partition_index[k], i)
+                weights_list.append(copy.deepcopy(weight_of_client))
+
+            weights = self.average(weights_list)
+
+            if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
+                self.save_info(start_time, weights, i+1)
+                # print("{} {}".format())
+                if self.total_grad >= self.max_grad_time:
+                    break
+
+        end_info(start_time, self.total_grad)
+        return self.current_time, self.current_grad_times, self.current_loss, self.current_round
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class FedAvg_SGD:
     def __init__(self, dataset, global_model, option):
         self.client_rate = option.client_rate
         self.client_number = option.client_number
@@ -97,7 +199,7 @@ class FedAvg:
 
             weights = self.average(weights_list)
 
-            if self.total_grad >= self.max_grad_time or (i + 1) % self.print_iteration == 0:
+            if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
                 self.save_info(start_time, weights, i+1)
                 # print("{} {}".format())
                 if self.total_grad >= self.max_grad_time:
@@ -226,7 +328,7 @@ class Zeroth_grad:
                 weights_list.append(copy.deepcopy(weight_of_client))
 
             weights = self.average(weights_list)
-            if self.total_grad >= self.max_grad_time or (i + 1) % self.print_iteration == 0:
+            if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
                 self.save_info(start_time, weights, i + 1)
                 if self.total_grad >= self.max_grad_time:
                     break
