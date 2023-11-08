@@ -209,7 +209,109 @@ class FedAvg_SIGNSGD:
 
 
 
+class FedZO:
+    def __init__(self, dataset, global_model, option):
+        self.client_rate = option.client_rate
+        self.client_number = option.client_number
+        self.local_iteration = option.local_iteration
+        self.iteration = option.iteration
+        self.dataset = dataset
+        self.global_model = global_model
+        self.total_grad = 0
+        self.evaluate_time = 1
+        self.grad_method = option.eta_type
+        self.chosen_client_num = int(max(self.client_rate * self.client_number, 1))
+        self.eta = option.eta
+        self.radius = option.radius
+        self.batch_size = option.batch_size
+        self.verbose = option.verbose
+        self.max_grad_time = option.max_grad_time
+        self.excel_solver = excel_solver()
+        self.print_iteration = option.print_iteration
 
+        self.current_time = []
+        self.current_grad_times = []
+        self.current_loss = []
+        self.current_round = []
+
+    def save_info(self, start_time, current_weights, current_round):
+        current_loss = get_loss(self.global_model, self.dataset, current_weights, current_round, self.verbose)
+        current_time = time.time()
+        self.current_time.append(copy.deepcopy(current_time - start_time))
+        self.current_grad_times.append(self.total_grad)
+        self.current_loss.append(current_loss)
+        self.current_round.append(current_round)
+
+    # 从单位球S ^ d中均匀抽样d维随机方向
+    def uniform_random_direction(self,d):
+        # 生成一个d维随机向量，其中每个分量都是从均匀分布[-1, 1]中随机抽样的
+        random_vector = np.random.uniform(low=-1, high=1, size=d)
+
+        # 将向量归一化为单位向量
+        normalized_vector = random_vector / np.linalg.norm(random_vector)
+        normalized_vector = normalized_vector.reshape(-1,1)
+        return normalized_vector
+
+    def update_client(self, current_weights, chosen_index, current_round=0):
+        weights = copy.deepcopy(current_weights)
+        for i in range(self.local_iteration):
+            X, Y = self.dataset.sample(chosen_index, self.batch_size)
+            # calculate gradient
+            # v_matrix = np.random.normal(loc=0, scale=1, size=(self.global_model.len(), 1))
+            # v_matrix = np.random.randn(self.global_model.len(), 1)
+            v_matrix = self.uniform_random_direction(self.global_model.len())
+            upper_val = self.global_model.loss((weights + self.radius * v_matrix), X, Y)
+            lower_val = self.global_model.loss(weights, X, Y)
+            # print(self.global_model.loss((weights), X, Y))
+            g = (upper_val - lower_val) * (1 / self.radius) * v_matrix
+            # g = self.global_model.grad(weights, X, Y)
+            self.total_grad += 2 * self.batch_size
+            eta = self.grad_method(self.eta, current_round)
+            g=g.reshape(-1,1)
+            weights -= eta * g
+            if self.total_grad >= self.max_grad_time:
+                break
+        return weights - current_weights
+
+    def average(self, weights_list):
+        sum_weight = sum(weights_list)
+        length = len(weights_list)
+        new_weights = sum(weights_list) / len(weights_list)
+        # print(weights_list)
+        return new_weights
+
+    def alg_run(self, start_time):
+        client_index = []
+        weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        # 划分客户端训练集
+        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        for i in range(self.client_number):
+            client_index.append(i)
+
+        self.save_info(start_time, weights, 0)
+        # Training
+        for i in range(self.iteration):
+            # judge FEs >= maxFEs?
+            delta_weights_list = []
+            # draw a client set
+            chosen_client_num = int(max(self.client_rate * self.client_number, 1))
+            chosen_client = random.sample(client_index, chosen_client_num)
+
+            for k in chosen_client:
+                weight_tmp = copy.deepcopy(weights)
+                # weight_tmp = weights
+                delta_weights = self.update_client(weight_tmp, partition_index[k], i)
+                delta_weights_list.append(copy.deepcopy(delta_weights))
+
+            weights +=self.average(delta_weights_list)
+            if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
+                self.save_info(start_time, weights, i+1)
+                # print("{} {}".format())
+                if self.total_grad >= self.max_grad_time:
+                    break
+
+        end_info(start_time, self.total_grad)
+        return self.current_time, self.current_grad_times, self.current_loss, self.current_round
 
 
 
