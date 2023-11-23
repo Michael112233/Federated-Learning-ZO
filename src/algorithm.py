@@ -9,8 +9,9 @@ from utils import end_info, excel_solver, judge_whether_print
 def get_loss(global_model, dataset, weights, current_round, verbose):
     Xfull, Yfull = dataset.full()
     loss = global_model.loss(weights, Xfull, Yfull)
+    accuracy = global_model.acc(weights, Xfull, Yfull)
     if verbose:
-        print("After iteration {}: loss is {}".format(current_round, loss))
+        print("After iteration {}: loss is {:.2f}, accuracy is {:.2f}%".format(current_round, loss, accuracy))
     return loss
 
 class FedAvg_GD:
@@ -31,7 +32,6 @@ class FedAvg_GD:
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.print_iteration = option.print_iteration
 
         self.current_time = []
         self.current_grad_times = []
@@ -106,6 +106,11 @@ class FedAvg_GD:
 
 
 
+
+
+
+
+
 class FedAvg_SIGNSGD:
     def __init__(self, dataset, global_model, option):
         self.client_rate = option.client_rate
@@ -124,7 +129,6 @@ class FedAvg_SIGNSGD:
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.print_iteration = option.print_iteration
         self.client_weight = [] # 用来存放每个客户端的模型
         self.current_time = []
         self.current_grad_times = []
@@ -140,11 +144,12 @@ class FedAvg_SIGNSGD:
         self.current_round.append(current_round)
 
     # 向所有客户端传递初始模型
-    def initial_client(self,initial_weights):
+    def initial_client(self, initial_weights):
         for i in range(self.client_number):
             self.client_weight.append(initial_weights)
+
     # 这里只是训练客户端，还没有更新客户端模型
-    def train_client(self, k,chosen_index, current_round=0):
+    def train_client(self, k, chosen_index, current_round=0):
         weights = copy.deepcopy(self.client_weight[k])
         for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
@@ -153,18 +158,17 @@ class FedAvg_SIGNSGD:
             v_matrix = np.random.randn(self.global_model.len(), 1)
             upper_val = self.global_model.loss((weights + self.radius * v_matrix), X, Y)
             lower_val = self.global_model.loss((weights - self.radius * v_matrix), X, Y)
-            # print(self.global_model.loss((weights), X, Y))
             g = (upper_val - lower_val) * (1 / (2 * self.radius)) * v_matrix
-            # g = self.global_model.grad(weights, X, Y)
             self.total_grad += 2 * self.batch_size
             eta = self.grad_method(self.eta, current_round)
             weights -= eta * g
             if self.total_grad >= self.max_grad_time:
                 break
         return np.sign(self.client_weight[k]-weights)
-    def update_client(self,k,sum_sign,current_round):
+
+    def update_client(self, k, sum_sign, current_round):
         eta = self.grad_method(self.eta, current_round)
-        self.client_weight[k]-=eta*sum_sign
+        self.client_weight[k] -= eta * sum_sign
 
     def sign(self, sign_list):
         sum_list = sum(sign_list)
@@ -183,20 +187,19 @@ class FedAvg_SIGNSGD:
         self.initial_client(weights)
         # Training
         for i in range(self.iteration):
-            # judge FEs >= maxFEs?
             # 所有客户端上传符号而不是模型
             sign_list = []
             # 全部客户端都参与训练
             for k in client_index:
-                # weight_tmp = weights
-                sign_g = self.train_client(k,partition_index[k], i)
+                sign_g = self.train_client(k, partition_index[k], i)
                 sign_list.append(sign_g)
 
             sum_sign = self.sign(sign_list)
             eta = self.grad_method(self.eta, i)
-            weights-=eta*sum_sign
+            weights -= eta * sum_sign
+
             for k in client_index:
-                self.update_client(k,sum_sign,i)
+                self.update_client(k, sum_sign, i)
 
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
                 self.save_info(start_time, weights, i+1)
@@ -206,6 +209,13 @@ class FedAvg_SIGNSGD:
 
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
+
+
+
+
+
+
+
 
 
 
@@ -227,7 +237,6 @@ class FedZO:
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.print_iteration = option.print_iteration
 
         self.current_time = []
         self.current_grad_times = []
@@ -248,17 +257,15 @@ class FedZO:
         random_vector = np.random.uniform(low=-1, high=1, size=d)
 
         # 将向量归一化为单位向量
-        normalized_vector = random_vector / np.linalg.norm(random_vector)
-        normalized_vector = normalized_vector.reshape(-1,1)
+        normalized_vector = random_vector
+        # normalized_vector = random_vector / np.linalg.norm(random_vector)
+        normalized_vector = normalized_vector.reshape(-1, 1)
         return normalized_vector
 
     def update_client(self, current_weights, chosen_index, current_round=0):
         weights = copy.deepcopy(current_weights)
         for i in range(self.local_iteration):
             X, Y = self.dataset.sample(chosen_index, self.batch_size)
-            # calculate gradient
-            # v_matrix = np.random.normal(loc=0, scale=1, size=(self.global_model.len(), 1))
-            # v_matrix = np.random.randn(self.global_model.len(), 1)
             v_matrix = self.uniform_random_direction(self.global_model.len())
             upper_val = self.global_model.loss((weights + self.radius * v_matrix), X, Y)
             lower_val = self.global_model.loss(weights, X, Y)
@@ -267,15 +274,13 @@ class FedZO:
             # g = self.global_model.grad(weights, X, Y)
             self.total_grad += 2 * self.batch_size
             eta = self.grad_method(self.eta, current_round)
-            g=g.reshape(-1,1)
+            g = g.reshape(-1, 1)
             weights -= eta * g
             if self.total_grad >= self.max_grad_time:
                 break
         return weights - current_weights
 
     def average(self, weights_list):
-        sum_weight = sum(weights_list)
-        length = len(weights_list)
         new_weights = sum(weights_list) / len(weights_list)
         # print(weights_list)
         return new_weights
@@ -303,7 +308,7 @@ class FedZO:
                 delta_weights = self.update_client(weight_tmp, partition_index[k], i)
                 delta_weights_list.append(copy.deepcopy(delta_weights))
 
-            weights +=self.average(delta_weights_list)
+            weights += self.average(delta_weights_list)
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
                 self.save_info(start_time, weights, i+1)
                 # print("{} {}".format())
@@ -335,7 +340,6 @@ class FedAvg_SGD:
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.print_iteration = option.print_iteration
 
         self.current_time = []
         self.current_grad_times = []
@@ -356,6 +360,8 @@ class FedAvg_SGD:
             # calculate gradient
             # v_matrix = np.random.normal(loc=0, scale=1, size=(self.global_model.len(), 1))
             v_matrix = np.random.randn(self.global_model.len(), 1)
+            up = (current_weights + self.radius * v_matrix)
+            down = (current_weights - self.radius * v_matrix)
             upper_val = self.global_model.loss((current_weights + self.radius * v_matrix), X, Y)
             lower_val = self.global_model.loss((current_weights - self.radius * v_matrix), X, Y)
             # print(self.global_model.loss((weights), X, Y))
@@ -369,8 +375,6 @@ class FedAvg_SGD:
         return current_weights
 
     def average(self, weights_list):
-        sum_weight = sum(weights_list)
-        length = len(weights_list)
         new_weights = sum(weights_list) / len(weights_list)
         # print(weights_list)
         return new_weights
@@ -450,7 +454,6 @@ class Zeroth_grad:
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.print_iteration = option.print_iteration
         # self.excel_solver.create_excel()
         self.current_time = []
         self.current_grad_times = []

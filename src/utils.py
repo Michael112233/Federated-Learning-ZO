@@ -26,21 +26,20 @@ def judge_whether_print(current_round):
 # 参数类，用于传递超参数以及超参数集中化
 class parameter:
     def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000,
-                 print_iteration=10, verbose=True):
+                 verbose=True):
         self.eta_type = eta_type
         self.eta = eta
         self.alpha = alpha
         self.memory_length = memory_length
         self.verbose = verbose
         self.batch_size = batch_size
-        self.print_iteration = print_iteration
         self.max_grad_time = max_grad_time
         self.client_rate = 0.1
         self.client_number = 100
-        self.local_iteration = 200  # origin 500, 10
+        self.local_iteration = 50  # origin 50, 10
         self.total_grad = 0
         self.iteration = 400000
-        self.radius = 1e-6
+        self.radius = 1e-4
 
 
 
@@ -65,6 +64,45 @@ class eta_class:
         if option == 3:
             return self.divide_eta
 
+def select_eta(algorithm_name, dataset_name, model_name):
+    eta = 10
+    if model_name == 'svm':
+        if algorithm_name == 'FedAvg_SignSGD':
+            return pow(10, -2.5)
+        elif algorithm_name == 'FedZO':
+            return 0.1
+        return 1e-2
+    if algorithm_name == 'zeroth_grad':
+        if dataset_name == 'rcv':
+            eta = 25
+        elif dataset_name == 'fashion_mnist':
+            eta = 2
+        elif dataset_name == 'cifar10':
+            eta = 20
+        else:
+            eta = 10
+    elif algorithm_name == 'FedAvg_SignSGD':
+        if dataset_name == 'rcv':
+            eta = 0.01
+        else:
+            eta = 0.005
+    elif algorithm_name == 'FedZO':
+        if dataset_name == 'rcv':
+            eta = 50
+        elif dataset_name == 'fashion_mnist':
+            eta = 20
+        elif dataset_name == 'cifar10':
+            eta = 70
+        else:
+            eta = 30
+    elif dataset_name == 'cifar10':
+        if algorithm_name == 'FedAvg_SGD':
+            eta = 30
+        elif algorithm_name == 'FedAvg_GD':
+            eta = 20
+    else:
+        eta = 10
+    return eta
 
 # 单次实验最终结果的输出
 def end_info(start_time, total_grad):

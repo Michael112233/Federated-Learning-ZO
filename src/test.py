@@ -1,6 +1,6 @@
 from sklearn.linear_model import LogisticRegression
 
-from sampling import get_mnist, get_rcv1
+from sampling import get_mnist, get_rcv1, get_cifar10, get_fashion_mnist
 from utils import parameter
 import numpy as np
 
@@ -9,7 +9,7 @@ def loss(y_hat, Y):
     loss = (-1 / len(Y)) * np.sum(Y * np.log(y_hat) + (1 - Y) * np.log(1 - y_hat))
     return loss
 
-dataset, X, Y, _ = get_rcv1()
+dataset, X, Y, _ = get_fashion_mnist()
 params = parameter(2)
 global_model = LogisticRegression(solver='newton-cg', max_iter=2000)
 Y = Y.ravel()
