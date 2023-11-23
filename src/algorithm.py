@@ -11,7 +11,7 @@ def get_loss(global_model, dataset, weights, current_round, verbose):
     loss = global_model.loss(weights, Xfull, Yfull)
     accuracy = global_model.acc(weights, Xfull, Yfull)
     if verbose:
-        print("After iteration {}: loss is {:.2f}, accuracy is {:.2f}%".format(current_round, loss, accuracy))
+        print("After iteration {}: loss is {}, accuracy is {:.2f}%".format(current_round, loss, accuracy))
     return loss
 
 class FedAvg_GD:

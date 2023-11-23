@@ -14,8 +14,8 @@ from algorithm import FedAvg_SGD, Zeroth_grad, FedAvg_GD, FedAvg_SIGNSGD, FedZO
 from utils import eta_class, parameter, make_dir, excel_solver, select_eta
 
 model_name = "svm" # logistic or svm
-dataset_name = 'mnist'
-algorithm_name = 'FedZO' # zeroth_grad or FedAvg_SGD or FedAvg_GD or FedAvg_SignSGD
+dataset_name = 'rcv'
+algorithm_name = 'FedAvg_SGD' # zeroth_grad or FedAvg_SGD or FedAvg_GD or FedAvg_SignSGD
 dir_mode = 1        # means "performance/experiment"
 
 grad_option = 2
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     eta_type = eta_list.choose(grad_option)
 
     if dataset_name == 'rcv':
-        dataset, X, Y, global_model = get_rcv1()
+        dataset, X, Y, global_model = get_rcv1(model_name)
     elif dataset_name == 'cifar10':
         dataset, X, Y, global_model = get_cifar10()
     elif dataset_name == 'fashion_mnist':

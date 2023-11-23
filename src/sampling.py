@@ -43,7 +43,7 @@ class data:
     def length(self):
         return self.X_train.shape[0]
 
-def get_rcv1():
+def get_rcv1(model_name):
     X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
     Y = Y.reshape(-1, 1)
     Y = (Y + 1) / 2
@@ -58,7 +58,10 @@ def get_rcv1():
     dataset = data(X, Y, 0.8)
     X = dataset.X_train
     Y = dataset.Y_train
-    global_model = LRmodel(X.shape[1], True)
+    if model_name == "svm":
+        global_model = SVM(X.shape[1], True)
+    else:
+        global_model = LRmodel(X.shape[1], True)
     return dataset, X, Y, global_model
 
 def get_mnist(model_name):

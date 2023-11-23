@@ -68,10 +68,16 @@ def select_eta(algorithm_name, dataset_name, model_name):
     eta = 10
     if model_name == 'svm':
         if algorithm_name == 'FedAvg_SignSGD':
-            return pow(10, -2.5)
+            if dataset_name == 'mnist':
+                return pow(10, -2.5)
         elif algorithm_name == 'FedZO':
-            return 0.1
-        return 1e-2
+            if dataset_name == 'mnist':
+                return 0.1
+        else:
+            if dataset_name == 'mnist':
+                return 1e-2
+            elif dataset_name == 'rcv':
+                return 10
     if algorithm_name == 'zeroth_grad':
         if dataset_name == 'rcv':
             eta = 25
