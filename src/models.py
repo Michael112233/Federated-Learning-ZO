@@ -54,7 +54,10 @@ class SVM:
         self.isSparse = isSparse
 
     def predict(self, weight, x):
-        y_hat = np.dot(x, weight)
+        if self.isSparse:
+            y_hat = x.dot(weight)
+        else:
+            y_hat = np.dot(x, weight)
         return y_hat
 
     def loss(self, weight, x, y):
