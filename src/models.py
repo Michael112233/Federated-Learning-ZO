@@ -60,13 +60,20 @@ class SVM:
             y_hat = np.dot(x, weight)
         return y_hat
 
-    def loss(self, weight, x, y):
-        y_hat = self.predict(weight, x)
-        loss = 0
+    def mat_power(self, mat):
+        return np.dot(mat.T, mat)
 
-        for i in range(len(y_hat)):
-            loss += max(0, 1 - y[i][0] * y_hat[i][0])
-        return loss
+    def loss(self, weight, x, y):
+        lambda_val = 0.1
+        loss_sum = 0
+        if self.isSparse:
+            for i in range(x.shape[0]):
+                loss_sum += self.mat_power(np.maximum(0.0, 1-y[i] * np.dot(weight.T, x[i]))) / 2
+        else:
+            for i in range(len(x)):
+                loss_sum += self.mat_power(np.maximum(0.0, 1-y[i] * np.dot(weight.T, x[i]))) / 2
+        loss = loss_sum / len(x) + lambda_val / 2 * self.mat_power(weight)
+        return loss[0][0]
 
     def acc(self, weight, x, y):
         y_hat = np.sign(self.predict(weight, x))

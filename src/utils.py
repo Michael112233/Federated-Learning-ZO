@@ -42,7 +42,6 @@ class parameter:
         self.radius = 1e-4
 
 
-
 # 规定了eta的计算方式
 class eta_class:
     def divide_eta(self, eta, iter, local_iter):
@@ -64,20 +63,31 @@ class eta_class:
         if option == 3:
             return self.divide_eta
 
+
 def select_eta(algorithm_name, dataset_name, model_name):
     eta = 10
     if model_name == 'svm':
         if algorithm_name == 'FedAvg_SignSGD':
             if dataset_name == 'mnist':
-                return pow(10, -2.5)
+                return 1e-3
+            elif dataset_name == 'rcv':
+                return 1e-6
+            else:
+                return 1e-2
         elif algorithm_name == 'FedZO':
             if dataset_name == 'mnist':
                 return 0.1
-        else:
-            if dataset_name == 'mnist':
+            else:
                 return 1e-2
-            elif dataset_name == 'rcv':
-                return 10
+        elif algorithm_name == 'zeroth_grad':
+            if dataset_name == 'rcv':
+                return 1e-2
+            else:
+                return 1e-2
+        elif algorithm_name == 'FedAvg_GD':
+            return 1e-2
+        else:
+            return 1e-2
     if algorithm_name == 'zeroth_grad':
         if dataset_name == 'rcv':
             eta = 25
@@ -108,7 +118,9 @@ def select_eta(algorithm_name, dataset_name, model_name):
             eta = 20
     else:
         eta = 10
+    print(eta)
     return eta
+
 
 # 单次实验最终结果的输出
 def end_info(start_time, total_grad):
@@ -151,7 +163,7 @@ def mkdir(path):
 
 # mode = 1 -> experiment
 # mode = 0 -> get params
-def make_dir(dataset_name, algorithm_name, params, mode):
+def make_dir(dataset_name, algorithm_name, model_name, params, mode):
     eta = params.eta
     alpha = params.alpha
     memory_length = params.memory_length
@@ -167,10 +179,13 @@ def make_dir(dataset_name, algorithm_name, params, mode):
     mkdir("../performance/{}".format(dir_name))
 
     mkdir("../performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
-    mkdir("../performance/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, eta))
+    mkdir("../performance/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name))
+    mkdir("../performance/{}/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, model_name, eta))
     if mode == 0 and (algorithm_name == "zeroth" or algorithm_name == "zeroth_grad"):
         # print(alpha)
-        mkdir("../performance/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, eta, alpha))
+        mkdir("../performance/{}/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, model_name,
+                                                                     eta, alpha))
         mkdir(
-            "../performance/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name, algorithm_name,
-                                                                                 eta, alpha, memory_length))
+            "../performance/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name,
+                                                                                    algorithm_name, model_name,
+                                                                                    eta, alpha, memory_length))

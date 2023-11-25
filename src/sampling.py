@@ -47,6 +47,8 @@ def get_rcv1(model_name):
     X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
     Y = Y.reshape(-1, 1)
     Y = (Y + 1) / 2
+    if model_name == "svm":
+        Y = Y*2-1
     # 创建全为1的列向量，作为偏置项列
     bias_column = np.ones(X.shape[0])
     # 将偏置项列转换为稀疏矩阵格式

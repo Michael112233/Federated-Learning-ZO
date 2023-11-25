@@ -1,5 +1,6 @@
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
+from sklearn.calibration import CalibratedClassifierCV
 
 from sampling import get_mnist, get_rcv1, get_cifar10, get_fashion_mnist
 from utils import parameter
@@ -21,12 +22,12 @@ def loss(y_hat, y):
 dataset, X, Y, _ = get_rcv1('svm')
 params = parameter(2)
 # global_model = LogisticRegression(solver='newton-cg', max_iter=2000)
-global_model = LinearSVC()
+global_model = SVC(kernel='linear')
 Y = Y.ravel()
 
 # for i in range(params.iteration):
 global_model.fit(X, Y)
-y_predict = global_model.predict(X)
+y_predict = global_model.decision_function(X)
 
 print(y_predict)
 
