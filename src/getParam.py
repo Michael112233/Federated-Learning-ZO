@@ -9,13 +9,13 @@ from multiprocessing import Pool, freeze_support
 from sampling import get_rcv1, get_mnist, get_cifar10, get_fashion_mnist
 from algorithm import FedAvg_SGD, Zeroth_grad, FedAvg_GD, FedAvg_SIGNSGD, FedZO
 from utils import excel_solver, parameter, eta_class, mkdir, make_dir
-0
+
 current_dataset_name_list = []
 current_algorithm_name_list = []
 current_best_eta_list = []
 current_best_loss_list = []
 
-dir_mode = 0       # means "performance/params"
+dir_mode = 0  # means "performance/params"
 
 
 def get_result(filename, algorithm):
@@ -26,11 +26,11 @@ def get_result(filename, algorithm):
     csv_solver.save_excel(current_time, current_grad_times, current_loss, current_round)
 
 
-eta_list = [100, 200, 300, 400, 500]
-# eta_list = [1]
+eta_list = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
 alpha = 0.5
-dataset_list = ['cifar10']
-algorithm_list = ['FedAvg_SGD', 'FedAvg_GD', 'FedZO']
+model_name = 'svm'
+dataset_list = ['rcv']
+algorithm_list = ['zeroth', 'FedAvg_SignSGD', 'FedAvg_SGD', 'FedAvg_GD', 'FedZO']
 memory_length = 5
 times_list = range(1, 4)
 verbose = True
@@ -44,42 +44,42 @@ eta_type = eta_choose.choose(2)
 
 def generate_csv(dataset_name, algorithm_name, eta, times):
     if dataset_name == 'rcv':
-        dataset, X, Y, global_model = get_rcv1()
+        dataset, X, Y, global_model = get_rcv1(model_name)
     elif dataset_name == 'cifar10':
         dataset, X, Y, global_model = get_cifar10()
     elif dataset_name == 'fashion_mnist':
         dataset, X, Y, global_model = get_fashion_mnist()
     else:
-        dataset, X, Y, global_model = get_mnist()
+        dataset, X, Y, global_model = get_mnist(model_name)
     max_grad_time = 500 * dataset.length()
 
     # for algorithm
     if algorithm_name == 'FedAvg_SGD':
-        filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
-            dataset_name, algorithm_name, eta, times)
+        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
+            dataset_name, algorithm_name, model_name, eta, times)
         print(filename)
         if dataset_name == "mnist" or dataset_name == 'fashion_mnist':
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, verbose)
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, verbose)
-        make_dir(dataset_name, algorithm_name, para, dir_mode)
+        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         algorithm = FedAvg_SGD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'FedAvg_GD':
-        filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
-            dataset_name, algorithm_name, eta, times)
+        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
+            dataset_name, algorithm_name, model_name, eta, times)
         print(filename)
         if dataset_name == "mnist" or dataset_name == 'fashion_mnist':
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 64, verbose)
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, verbose)
-        make_dir(dataset_name, algorithm_name, para, dir_mode)
+        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         algorithm = FedAvg_GD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'zeroth':
-        filename = "../performance/params/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
+        filename = "../performance/params/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
             dataset_name,
-            algorithm_name, eta, alpha,
+            algorithm_name, model_name, eta, alpha,
             memory_length,
             times)
         if dataset_name == "mnist" or dataset_name == "fashion_mnist":
@@ -88,14 +88,14 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000,
                              verbose)
-        make_dir(dataset_name, algorithm_name, para, dir_mode)
+        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         print(filename)
         algorithm = Zeroth_grad(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'FedAvg_SignSGD':
-        filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
+        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
             dataset_name,
-            algorithm_name, eta,
+            algorithm_name, model_name, eta,
             times)
         if dataset_name == "mnist" or dataset_name == "fashion_mnist":
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 64,
@@ -103,14 +103,14 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000,
                              verbose)
-        make_dir(dataset_name, algorithm_name, para, dir_mode)
+        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         print(filename)
         algorithm = FedAvg_SIGNSGD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'FedZO':
-        filename = "../performance/params/{}/{}/eta={}/({}).csv".format(
+        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
             dataset_name,
-            algorithm_name, eta,
+            algorithm_name, model_name, eta,
             times)
         if dataset_name == "mnist" or dataset_name == "fashion_mnist":
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 64,
@@ -118,7 +118,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000,
                              verbose)
-        make_dir(dataset_name, algorithm_name, para, dir_mode)
+        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         print(filename)
         algorithm = FedZO(dataset, global_model, para)
         get_result(filename, algorithm)
@@ -145,19 +145,19 @@ def summary_csv():
     print("----")
     for dataset_name in dataset_list:
         for algorithm_name in algorithm_list:
-            best_loss = 100
+            best_loss = 1000000
             best_eta = -1
             for eta in eta_list:
                 if algorithm_name == "zeroth":
-                    g = os.walk(r"../performance/params/{}/{}/eta={}/alpha={}/memory_length={}".format(dataset_name,
-                                                                                                       algorithm_name,
-                                                                                                       eta, alpha,
-                                                                                                       memory_length))
+                    g = os.walk(r"../performance/params/{}/{}/{}/eta={}/alpha={}/memory_length={}".format(dataset_name,
+                                                                                                          algorithm_name,
+                                                                                                          model_name,
+                                                                                                          eta, alpha,
+                                                                                                          memory_length))
                 else:
-                    g = os.walk(r"../performance/params/{}/{}/eta={}".format(dataset_name,
-                                                                             algorithm_name, eta))
+                    g = os.walk(r"../performance/params/{}/{}/{}/eta={}".format(dataset_name,
+                                                                                algorithm_name, model_name, eta))
                 current_loss_list = []
-                ans = 0
                 for path, dir_list, file_list in g:
                     for file_name in file_list:
                         csv_path = (os.path.join(path, file_name))

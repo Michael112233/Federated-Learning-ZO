@@ -71,23 +71,31 @@ def select_eta(algorithm_name, dataset_name, model_name):
             if dataset_name == 'mnist':
                 return 1e-3
             elif dataset_name == 'rcv':
-                return 1e-6
+                return 1e-3
             else:
                 return 1e-2
         elif algorithm_name == 'FedZO':
             if dataset_name == 'mnist':
                 return 0.1
+            elif dataset_name == 'rcv':
+                return 1e-2
             else:
                 return 1e-2
         elif algorithm_name == 'zeroth_grad':
             if dataset_name == 'rcv':
-                return 1e-2
+                return 1e-3
             else:
                 return 1e-2
         elif algorithm_name == 'FedAvg_GD':
-            return 1e-2
-        else:
-            return 1e-2
+            if dataset_name == 'mnist':
+                return 1e-2
+            else:
+                return 1e-3
+        elif algorithm_name == 'FedAvg_SGD':
+            if dataset_name == 'mnist':
+                return 1e-2
+            else:
+                return 1e-3
     if algorithm_name == 'zeroth_grad':
         if dataset_name == 'rcv':
             eta = 25

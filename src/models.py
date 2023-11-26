@@ -65,14 +65,17 @@ class SVM:
 
     def loss(self, weight, x, y):
         lambda_val = 0.1
-        loss_sum = 0
+        y_hat = self.predict(weight, x)
+        # loss_sum = 0
+        # tmp1 = np.maximum(0.0, 1 - y * y_hat)
+        loss_sum = sum(np.maximum(0.0, 1 - y * y_hat) ** 2) / 2
+        # for i in range(len(x)):
+        #     tmp = np.dot(weight.T, x[i])
+        #     loss_sum += self.mat_power(np.maximum(0.0, 1 - y[i] * np.dot(weight.T, x[i]))) / 2
         if self.isSparse:
-            for i in range(x.shape[0]):
-                loss_sum += self.mat_power(np.maximum(0.0, 1-y[i] * np.dot(weight.T, x[i]))) / 2
+            loss = loss_sum / x.shape[0] + lambda_val / 2 * self.mat_power(weight)
         else:
-            for i in range(len(x)):
-                loss_sum += self.mat_power(np.maximum(0.0, 1-y[i] * np.dot(weight.T, x[i]))) / 2
-        loss = loss_sum / len(x) + lambda_val / 2 * self.mat_power(weight)
+            loss = loss_sum / len(x) + lambda_val / 2 * self.mat_power(weight)
         return loss[0][0]
 
     def acc(self, weight, x, y):
