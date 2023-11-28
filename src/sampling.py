@@ -44,11 +44,10 @@ class data:
         return self.X_train.shape[0]
 
 def get_rcv1(model_name):
-    X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
+    X, Y = load_svmlight_file('./data/rcv/rcv1_test.binary')
     Y = Y.reshape(-1, 1)
-    Y = (Y + 1) / 2
-    if model_name == "svm":
-        Y = Y*2-1
+    if model_name == "logistic":
+        Y = (Y + 1) / 2
     # 创建全为1的列向量，作为偏置项列
     bias_column = np.ones(X.shape[0])
     # 将偏置项列转换为稀疏矩阵格式
@@ -67,7 +66,7 @@ def get_rcv1(model_name):
     return dataset, X, Y, global_model
 
 def get_mnist(model_name):
-    mnist_data = sio.loadmat('../data/mnist/mnist.mat')
+    mnist_data = sio.loadmat('./data/mnist/mnist.mat')
     x = mnist_data['Z']
     y = mnist_data['y']
     y = (y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
@@ -90,7 +89,7 @@ def get_mnist(model_name):
     return dataset, X, Y, global_model
 
 def get_cifar10():
-    cifar_data = sio.loadmat("../data/cifar10/cifar10.mat")
+    cifar_data = sio.loadmat("./data/cifar10/cifar10.mat")
     x = cifar_data['Z']
     y = cifar_data['y']
     y = (y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
@@ -111,7 +110,7 @@ def get_cifar10():
     return dataset, X, Y, global_model
 
 def get_fashion_mnist():
-    mnist_data = pd.read_csv('../data/fashion_mnist/fashion-mnist_train.csv')
+    mnist_data = pd.read_csv('./data/fashion_mnist/fashion-mnist_train.csv')
     mnist_data = np.array(mnist_data)
     Y = mnist_data[:, 0]
     X = mnist_data[:, 1:]

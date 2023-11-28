@@ -55,7 +55,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
 
     # for algorithm
     if algorithm_name == 'FedAvg_SGD':
-        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
+        filename = "./performance/params/{}/{}/{}/eta={}/({}).csv".format(
             dataset_name, algorithm_name, model_name, eta, times)
         print(filename)
         if dataset_name == "mnist" or dataset_name == 'fashion_mnist':
@@ -66,7 +66,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         algorithm = FedAvg_SGD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'FedAvg_GD':
-        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
+        filename = "./performance/params/{}/{}/{}/eta={}/({}).csv".format(
             dataset_name, algorithm_name, model_name, eta, times)
         print(filename)
         if dataset_name == "mnist" or dataset_name == 'fashion_mnist':
@@ -77,7 +77,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         algorithm = FedAvg_GD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'zeroth':
-        filename = "../performance/params/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
+        filename = "./performance/params/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}/({}).csv".format(
             dataset_name,
             algorithm_name, model_name, eta, alpha,
             memory_length,
@@ -93,7 +93,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         algorithm = Zeroth_grad(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'FedAvg_SignSGD':
-        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
+        filename = "./performance/params/{}/{}/{}/eta={}/({}).csv".format(
             dataset_name,
             algorithm_name, model_name, eta,
             times)
@@ -108,7 +108,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         algorithm = FedAvg_SIGNSGD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'FedZO':
-        filename = "../performance/params/{}/{}/{}/eta={}/({}).csv".format(
+        filename = "./performance/params/{}/{}/{}/eta={}/({}).csv".format(
             dataset_name,
             algorithm_name, model_name, eta,
             times)
@@ -149,13 +149,13 @@ def summary_csv():
             best_eta = -1
             for eta in eta_list:
                 if algorithm_name == "zeroth":
-                    g = os.walk(r"../performance/params/{}/{}/{}/eta={}/alpha={}/memory_length={}".format(dataset_name,
+                    g = os.walk(r"..x/performance/params/{}/{}/{}/eta={}/alpha={}/memory_length={}".format(dataset_name,
                                                                                                           algorithm_name,
                                                                                                           model_name,
                                                                                                           eta, alpha,
                                                                                                           memory_length))
                 else:
-                    g = os.walk(r"../performance/params/{}/{}/{}/eta={}".format(dataset_name,
+                    g = os.walk(r"./performance/params/{}/{}/{}/eta={}".format(dataset_name,
                                                                                 algorithm_name, model_name, eta))
                 current_loss_list = []
                 for path, dir_list, file_list in g:
@@ -179,16 +179,16 @@ def summary_csv():
 
 
 def sum_up_param():
-    mkdir("../performance/sum_up")
-    mkdir("../performance/sum_up/eta")
-    solver = excel_solver(file_path_import="../performance/sum_up/eta/eta_info.csv")
+    mkdir("./performance/sum_up")
+    mkdir("./performance/sum_up/eta")
+    solver = excel_solver(file_path_import="./performance/sum_up/eta/eta_info.csv")
     solver.save_best_param(current_algorithm_name_list, current_dataset_name_list, current_best_eta_list,
                            current_best_loss_list)
 
 
 if __name__ == '__main__':
-    freeze_support()
-    get_params()
+    # freeze_support()
+    # get_params()
     summary_csv()
     sum_up_param()
 # generate_csv()

@@ -54,35 +54,31 @@ class SVM:
         self.isSparse = isSparse
 
     def predict(self, weight, x):
-        if self.isSparse:
-            y_hat = x.dot(weight)
-        else:
-            y_hat = np.dot(x, weight)
+        # if self.isSparse:
+        y_hat = x.dot(weight)
+        # else:
+        #     y_hat = np.dot(x, weight)
         return y_hat
 
-    def mat_power(self, mat):
-        return np.dot(mat.T, mat)
-
     def loss(self, weight, x, y):
-        lambda_val = 0.1
+        lambda_val = 1e-4
         y_hat = self.predict(weight, x)
-        # loss_sum = 0
-        # tmp1 = np.maximum(0.0, 1 - y * y_hat)
-        loss_sum = sum(np.maximum(0.0, 1 - y * y_hat) ** 2) / 2
+        loss_sum = 0
+        tmp1 = np.maximum(0.0, 1 - y * y_hat)
+        tmp2 = np.maximum(0.0, 1 - y * y_hat) ** 2
+        loss_avg = np.mean(np.maximum(0.0, 1 - y * y_hat) ** 2) / 2
         # for i in range(len(x)):
         #     tmp = np.dot(weight.T, x[i])
         #     loss_sum += self.mat_power(np.maximum(0.0, 1 - y[i] * np.dot(weight.T, x[i]))) / 2
-        if self.isSparse:
-            loss = loss_sum / x.shape[0] + lambda_val / 2 * self.mat_power(weight)
-        else:
-            loss = loss_sum / len(x) + lambda_val / 2 * self.mat_power(weight)
-        return loss[0][0]
+        loss = loss_avg # + lambda_val / 2 * np.linalg.norm(weight, ord=2) ** 2
+        return loss
 
     def acc(self, weight, x, y):
-        y_hat = np.sign(self.predict(weight, x))
-        current_array = y_hat - y
-        current_index = np.where(current_array == 0)
-        accuracy = len(current_index[0]) / len(y)
+        y_hat = self.predict(weight, x)
+        y_hat = np.sign(y_hat)
+        corrent_array = y_hat - y
+        corrent_index = np.where(corrent_array == 0)
+        accuracy = len(corrent_index[0]) / len(y)
         return accuracy * 100
 
     def len(self):

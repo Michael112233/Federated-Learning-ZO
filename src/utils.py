@@ -71,31 +71,31 @@ def select_eta(algorithm_name, dataset_name, model_name):
             if dataset_name == 'mnist':
                 return 1e-3
             elif dataset_name == 'rcv':
-                return 1e-3
+                return 1e-2
             else:
                 return 1e-2
         elif algorithm_name == 'FedZO':
             if dataset_name == 'mnist':
-                return 0.1
+                return 1
             elif dataset_name == 'rcv':
-                return 1e-2
+                return 10
             else:
                 return 1e-2
         elif algorithm_name == 'zeroth_grad':
             if dataset_name == 'rcv':
-                return 1e-3
+                return 1
             else:
-                return 1e-2
+                return 1
         elif algorithm_name == 'FedAvg_GD':
             if dataset_name == 'mnist':
-                return 1e-2
+                return 1
             else:
-                return 1e-3
+                return 1
         elif algorithm_name == 'FedAvg_SGD':
             if dataset_name == 'mnist':
-                return 1e-2
+                return 1
             else:
-                return 1e-3
+                return 1
     if algorithm_name == 'zeroth_grad':
         if dataset_name == 'rcv':
             eta = 25
@@ -109,7 +109,7 @@ def select_eta(algorithm_name, dataset_name, model_name):
         if dataset_name == 'rcv':
             eta = 0.01
         else:
-            eta = 0.005
+            eta = 0.003
     elif algorithm_name == 'FedZO':
         if dataset_name == 'rcv':
             eta = 50
@@ -140,7 +140,7 @@ def end_info(start_time, total_grad):
 # 放置一些csv存储相关的代码
 class excel_solver:
     def __init__(self, file_path_import=""):
-        file_path = "../performance/excel/"
+        file_path = "./performance/excel/"
         file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".csv"
         if file_path_import == "":
             self.file_path = file_path + file_name
@@ -183,17 +183,17 @@ def make_dir(dataset_name, algorithm_name, model_name, params, mode):
     else:
         return
 
-    mkdir("../performance")
-    mkdir("../performance/{}".format(dir_name))
+    mkdir("./performance")
+    mkdir("./performance/{}".format(dir_name))
 
-    mkdir("../performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
-    mkdir("../performance/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name))
-    mkdir("../performance/{}/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, model_name, eta))
+    mkdir("./performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
+    mkdir("./performance/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name))
+    mkdir("./performance/{}/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, model_name, eta))
     if mode == 0 and (algorithm_name == "zeroth" or algorithm_name == "zeroth_grad"):
         # print(alpha)
-        mkdir("../performance/{}/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, model_name,
+        mkdir("./performance/{}/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, model_name,
                                                                      eta, alpha))
         mkdir(
-            "../performance/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name,
+            "./performance/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name,
                                                                                     algorithm_name, model_name,
                                                                                     eta, alpha, memory_length))
