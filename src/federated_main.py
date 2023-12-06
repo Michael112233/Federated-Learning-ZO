@@ -13,8 +13,8 @@ from options import args_parser
 from algorithm import FedAvg_SGD, Zeroth_grad, FedAvg_GD, FedAvg_SIGNSGD, FedZO
 from utils import eta_class, parameter, make_dir, excel_solver, select_eta
 
-model_name = "logistic" # logistic or svm
-dataset_name = 'mnist'
+model_name = "svm" # logistic or svm
+dataset_name = 'cifar10'
 algorithm_name = 'zeroth_grad' # zeroth_grad or FedAvg_SGD or FedAvg_GD or FedAvg_SignSGD or FedZO
 dir_mode = 1        # means "performance/experiment"
 
@@ -39,9 +39,9 @@ if __name__ == '__main__':
     if dataset_name == 'rcv':
         dataset, X, Y, global_model = get_rcv1(model_name)
     elif dataset_name == 'cifar10':
-        dataset, X, Y, global_model = get_cifar10()
+        dataset, X, Y, global_model = get_cifar10(model_name)
     elif dataset_name == 'fashion_mnist':
-        dataset, X, Y, global_model = get_fashion_mnist()
+        dataset, X, Y, global_model = get_fashion_mnist(model_name)
     else:
         dataset, X, Y, global_model = get_mnist(model_name)
     max_grad_time = 2000 * dataset.length()

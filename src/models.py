@@ -63,9 +63,9 @@ class SVM:
     def loss(self, weight, x, y):
         lambda_val = 1e-4
         y_hat = self.predict(weight, x)
-        loss_sum = 0
-        tmp1 = np.maximum(0.0, 1 - y * y_hat)
-        tmp2 = np.maximum(0.0, 1 - y * y_hat) ** 2
+        # loss_sum = 0
+        # tmp1 = np.maximum(0.0, 1 - y * y_hat)
+        # tmp2 = np.maximum(0.0, 1 - y * y_hat) ** 2
         loss_avg = np.mean(np.maximum(0.0, 1 - y * y_hat) ** 2) / 2
         # for i in range(len(x)):
         #     tmp = np.dot(weight.T, x[i])

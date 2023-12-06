@@ -75,57 +75,58 @@ def select_eta(algorithm_name, dataset_name, model_name):
             else:
                 return 1e-2
         elif algorithm_name == 'FedZO':
-            if dataset_name == 'mnist':
-                return 1
-            elif dataset_name == 'rcv':
-                return 10
+            if dataset_name == 'cifar10':
+                return 0.1
             else:
-                return 1e-2
-        elif algorithm_name == 'zeroth_grad':
-            if dataset_name == 'rcv':
                 return 1
+        elif algorithm_name == 'zeroth_grad':
+            if dataset_name == 'cifar10':
+                return 0.01
+            elif dataset_name == 'fashion_mnist':
+                return 0.1
             else:
                 return 1
         elif algorithm_name == 'FedAvg_GD':
-            if dataset_name == 'mnist':
-                return 1
+            if dataset_name == 'cifar10' or dataset_name == 'fashion_mnist':
+                return 0.1
             else:
                 return 1
         elif algorithm_name == 'FedAvg_SGD':
-            if dataset_name == 'mnist':
-                return 1
+            if dataset_name == 'cifar10' or dataset_name == 'fashion_mnist':
+                return 0.1
             else:
                 return 1
-    if algorithm_name == 'zeroth_grad':
-        if dataset_name == 'rcv':
-            eta = 25
-        elif dataset_name == 'fashion_mnist':
-            eta = 2
+    else:
+        if algorithm_name == 'zeroth_grad':
+            if dataset_name == 'rcv':
+                eta = 25
+            elif dataset_name == 'fashion_mnist':
+                eta = 2
+            elif dataset_name == 'cifar10':
+                eta = 20
+            else:
+                eta = 10
+        elif algorithm_name == 'FedAvg_SignSGD':
+            if dataset_name == 'rcv':
+                eta = 0.01
+            else:
+                eta = 0.003
+        elif algorithm_name == 'FedZO':
+            if dataset_name == 'rcv':
+                eta = 50
+            elif dataset_name == 'fashion_mnist':
+                eta = 20
+            elif dataset_name == 'cifar10':
+                eta = 70
+            else:
+                eta = 30
         elif dataset_name == 'cifar10':
-            eta = 20
+            if algorithm_name == 'FedAvg_SGD':
+                eta = 30
+            elif algorithm_name == 'FedAvg_GD':
+                eta = 20
         else:
             eta = 10
-    elif algorithm_name == 'FedAvg_SignSGD':
-        if dataset_name == 'rcv':
-            eta = 0.01
-        else:
-            eta = 0.003
-    elif algorithm_name == 'FedZO':
-        if dataset_name == 'rcv':
-            eta = 50
-        elif dataset_name == 'fashion_mnist':
-            eta = 20
-        elif dataset_name == 'cifar10':
-            eta = 70
-        else:
-            eta = 30
-    elif dataset_name == 'cifar10':
-        if algorithm_name == 'FedAvg_SGD':
-            eta = 30
-        elif algorithm_name == 'FedAvg_GD':
-            eta = 20
-    else:
-        eta = 10
     print(eta)
     return eta
 

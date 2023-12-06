@@ -505,7 +505,9 @@ class Zeroth_grad:
             delta_list = np.array(self.delta_weight_list)
             delta_list = (delta_list.reshape((self.memory_length, self.global_model.len()))).T
             # initialize matrix P
-            self.p_matrix, _ = np.linalg.qr(delta_list)
+            self.p_matrix, a = np.linalg.qr(delta_list)
+            # tmp = self.p_matrix.T.dot(self.p_matrix)
+            # # tmp1 = a.dot(a.T)
             self.delta_weight_list = []
 
         return new_weights
