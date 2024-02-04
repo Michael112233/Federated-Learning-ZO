@@ -97,11 +97,11 @@ def get_cifar10(model_name):
         y = y * 2 - 1
     x = x.reshape((x.shape[0], x.shape[1]))
     y = y.reshape(-1, 1)
-    # 添加一列全为1的偏置项列
-    x = np.hstack((x, np.ones((x.shape[0], 1))))
     # 归一化特征向量
     x = normalize(x, axis=1, norm='l2')
     # x = normalize(x, axis=1, norm='l2')
+    # 添加一列全为1的偏置项列
+    x = np.hstack((x, np.ones((x.shape[0], 1))))
     dataset = data(x, y, 0.8)
     # 提取出训练集
     X = dataset.X_train
