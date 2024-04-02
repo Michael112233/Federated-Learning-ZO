@@ -26,7 +26,7 @@ def judge_whether_print(current_round):
 # 参数类，用于传递超参数以及超参数集中化
 class parameter:
     def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000,
-                 verbose=True):
+                 verbose=True, sample_kind=0):
         self.eta_type = eta_type
         self.eta = eta
         self.alpha = alpha
@@ -40,6 +40,7 @@ class parameter:
         self.total_grad = 0
         self.iteration = 400000
         self.radius = 1e-4
+        self.sample_kind = sample_kind  # 0 for iid, 1 for non_iid
 
 
 # 规定了eta的计算方式

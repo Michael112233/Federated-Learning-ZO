@@ -2,7 +2,7 @@ import copy
 import random
 import time
 import numpy as np
-from sampling import iid_partition
+from sampling import iid_partition, non_iid_partition
 from utils import end_info, excel_solver, judge_whether_print
 
 
@@ -13,6 +13,7 @@ def get_loss(global_model, dataset, weights, current_round, verbose):
     if verbose:
         print("After iteration {}: loss is {}, accuracy is {:.2f}%".format(current_round, loss, accuracy))
     return loss
+
 
 class FedAvg_GD:
     def __init__(self, dataset, global_model, option):
@@ -95,20 +96,13 @@ class FedAvg_GD:
             weights = self.average(weights_list)
 
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
-                self.save_info(start_time, weights, i+1)
+                self.save_info(start_time, weights, i + 1)
                 # print("{} {}".format())
                 if self.total_grad >= self.max_grad_time:
                     break
 
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
-
-
-
-
-
-
-
 
 
 class FedAvg_SIGNSGD:
@@ -129,7 +123,7 @@ class FedAvg_SIGNSGD:
         self.verbose = option.verbose
         self.max_grad_time = option.max_grad_time
         self.excel_solver = excel_solver()
-        self.client_weight = [] # 用来存放每个客户端的模型
+        self.client_weight = []  # 用来存放每个客户端的模型
         self.current_time = []
         self.current_grad_times = []
         self.current_loss = []
@@ -164,7 +158,7 @@ class FedAvg_SIGNSGD:
             weights -= eta * g
             if self.total_grad >= self.max_grad_time:
                 break
-        return np.sign(self.client_weight[k]-weights)
+        return np.sign(self.client_weight[k] - weights)
 
     def update_client(self, k, sum_sign, current_round):
         eta = self.grad_method(self.eta, current_round)
@@ -202,21 +196,13 @@ class FedAvg_SIGNSGD:
                 self.update_client(k, sum_sign, i)
 
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
-                self.save_info(start_time, weights, i+1)
+                self.save_info(start_time, weights, i + 1)
                 # print("{} {}".format())
                 if self.total_grad >= self.max_grad_time:
                     break
 
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
-
-
-
-
-
-
-
-
 
 
 class FedZO:
@@ -252,7 +238,7 @@ class FedZO:
         self.current_round.append(current_round)
 
     # 从单位球S ^ d中均匀抽样d维随机方向
-    def uniform_random_direction(self,d):
+    def uniform_random_direction(self, d):
         # 生成一个d维随机向量，其中每个分量都是从均匀分布[-1, 1]中随机抽样的
         random_vector = np.random.uniform(low=-1, high=1, size=d)
 
@@ -310,16 +296,13 @@ class FedZO:
 
             weights += self.average(delta_weights_list)
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
-                self.save_info(start_time, weights, i+1)
+                self.save_info(start_time, weights, i + 1)
                 # print("{} {}".format())
                 if self.total_grad >= self.max_grad_time:
                     break
 
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
-
-
-
 
 
 class FedAvg_SGD:
@@ -405,29 +388,13 @@ class FedAvg_SGD:
             weights = self.average(weights_list)
 
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
-                self.save_info(start_time, weights, i+1)
+                self.save_info(start_time, weights, i + 1)
                 # print("{} {}".format())
                 if self.total_grad >= self.max_grad_time:
                     break
 
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class Zeroth_grad:
@@ -439,6 +406,7 @@ class Zeroth_grad:
         self.local_iteration = option.local_iteration
         self.iteration = option.iteration
         self.radius = option.radius
+        self.sample_kind = option.sample_kind
         self.total_grad = 0
         self.evaluate_time = 2
         self.delta_weight_list = []
@@ -515,10 +483,13 @@ class Zeroth_grad:
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         self.save_info(start_time, weights, 0)
         # 划分客户端训练集
-        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        if self.sample_kind == 0:  # iid
+            partition_index = iid_partition(self.dataset.length(), self.client_number)
+        else:  # non-iid
+            self.dataset.sort()
+            partition_index = non_iid_partition(self.dataset.length(), self.client_number, self.dataset.sort_index)
         for i in range(self.client_number):
             client_index.append(i)
-        # print(client_index)
 
         # Training
         for i in range(self.iteration):

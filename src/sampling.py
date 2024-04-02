@@ -27,6 +27,8 @@ class data:
         self.Y_train = self.Y[rand_idxs[:N_train]]
         self.X_test = self.X[rand_idxs[N_train:]]
         self.Y_test = self.Y[rand_idxs[N_train:]]
+        # for non-iid
+        self.sort_index = np.arange(N)
 
     def sample(self, chosen_index, batch_size=64):
         start_time = time.time()
@@ -37,6 +39,10 @@ class data:
         end_time = time.time()
         # print(end_time - start_time)
         return X_batch, Y_batch
+
+    def sort(self):
+        y_train = self.Y_train[:, 0]
+        self.sort_index = np.argsort(y_train)
 
     def full(self):
         return self.X_train, self.Y_train
@@ -146,3 +152,11 @@ def iid_partition(length, num_clients):
     for i in range(num_clients):
         dict_index[i] = rand_idxs[i*N_per:(i+1)*N_per]
     return dict_index
+
+def non_iid_partition(length, num_clients, sort_index):
+    N_per = int(length / num_clients)
+    dict_index = {}
+    for i in range(num_clients):
+        dict_index[i] = sort_index[i*N_per:(i+1)*N_per]
+    return dict_index
+

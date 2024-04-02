@@ -34,6 +34,7 @@ if __name__ == '__main__':
     else:
         batch_size = 64
     verbose = True
+    sample_kind = 0  # non_iid=0, iid=1
     eta_type = eta_list.choose(grad_option)
 
     if dataset_name == 'rcv':
@@ -46,7 +47,7 @@ if __name__ == '__main__':
         dataset, X, Y, global_model = get_mnist(model_name)
     max_grad_time = 2000 * dataset.length()
 
-    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose)
+    para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose, sample_kind)
     make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
     if algorithm_name == 'zeroth_grad':
         algorithm = Zeroth_grad(dataset, global_model, para)
