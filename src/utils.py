@@ -65,7 +65,7 @@ class eta_class:
             return self.divide_eta
 
 
-def select_eta(algorithm_name, dataset_name, model_name):
+def select_eta(algorithm_name, dataset_name, model_name, sample_kind):
     eta = 10
     if model_name == 'svm':
         if algorithm_name == 'FedAvg_SignSGD':
@@ -78,12 +78,16 @@ def select_eta(algorithm_name, dataset_name, model_name):
         elif algorithm_name == 'FedZO':
             if dataset_name == 'cifar10':
                 return 0.1
+            if dataset_name == 'rcv':
+                return 5
             else:
                 return 1
         elif algorithm_name == 'zeroth_grad':
             if dataset_name == 'cifar10':
-                return 0.01
+                return 0.1
             elif dataset_name == 'fashion_mnist':
+                return 0.1
+            elif dataset_name == 'mnist':
                 return 0.1
             else:
                 return 1
@@ -93,20 +97,25 @@ def select_eta(algorithm_name, dataset_name, model_name):
             else:
                 return 1
         elif algorithm_name == 'FedAvg_SGD':
-            if dataset_name == 'cifar10' or dataset_name == 'fashion_mnist':
+            if dataset_name == 'cifar10' or dataset_name == 'fashion_mnist' or dataset_name == 'mnist':
                 return 0.1
             else:
                 return 1
     else:
         if algorithm_name == 'zeroth_grad':
             if dataset_name == 'rcv':
-                eta = 25
+                eta = 10
             elif dataset_name == 'fashion_mnist':
                 eta = 2
             elif dataset_name == 'cifar10':
-                eta = 20
+                eta = 5
+            elif dataset_name == 'mnist':
+                if sample_kind == 0:
+                    eta = 5  # non-iid
+                else:
+                    eta = 0.04  # iid
             else:
-                eta = 10
+                eta = 5
         elif algorithm_name == 'FedAvg_SignSGD':
             if dataset_name == 'rcv':
                 eta = 0.01
@@ -142,7 +151,7 @@ def end_info(start_time, total_grad):
 # 放置一些csv存储相关的代码
 class excel_solver:
     def __init__(self, file_path_import=""):
-        file_path = "./performance/excel/"
+        file_path = "../performance/excel/"
         file_name = str(time.strftime('%Y-%m-%d-%H-%M-%S')) + ".csv"
         if file_path_import == "":
             self.file_path = file_path + file_name
@@ -177,6 +186,10 @@ def make_dir(dataset_name, algorithm_name, model_name, params, mode):
     eta = params.eta
     alpha = params.alpha
     memory_length = params.memory_length
+    if params.sample_kind == 0:
+        sample_name = "iid"
+    else:
+        sample_name = "non_iid"
     dir_name = ""
     if mode == 0:
         dir_name = "params"
@@ -185,17 +198,41 @@ def make_dir(dataset_name, algorithm_name, model_name, params, mode):
     else:
         return
 
-    mkdir("./performance")
-    mkdir("./performance/{}".format(dir_name))
+    mkdir("../performance")
+    mkdir("../performance/{}".format(dir_name))
 
-    mkdir("./performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
-    mkdir("./performance/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name))
-    mkdir("./performance/{}/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, model_name, eta))
+    mkdir("../performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
+    mkdir("../performance/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name))
+    mkdir("../performance/{}/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name, sample_name))
+    mkdir("../performance/{}/{}/{}/{}/{}/eta={}".format(dir_name, dataset_name, algorithm_name, model_name, sample_name,
+                                                        eta))
     if mode == 0 and (algorithm_name == "zeroth" or algorithm_name == "zeroth_grad"):
         # print(alpha)
-        mkdir("./performance/{}/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name, model_name,
-                                                                     eta, alpha))
+        mkdir("../performance/{}/{}/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name,
+                                                                        model_name, sample_name,
+                                                                        eta, alpha))
         mkdir(
-            "./performance/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name,
-                                                                                    algorithm_name, model_name,
-                                                                                    eta, alpha, memory_length))
+            "../performance/{}/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name,
+                                                                                       algorithm_name, model_name,
+                                                                                       sample_name,
+                                                                                       eta, alpha, memory_length))
+
+
+import os
+
+
+def find_latest_path(folder):
+    latest_file = None
+    latest_time = 0
+
+    for root, dirs, files in os.walk(folder):
+        for file in files:
+            file_path = os.path.join(root, file)
+            # 获取文件的创建时间
+            file_creation_time = os.path.getctime(file_path)
+            # 检查是否是最晚创建的文件
+            if file_creation_time > latest_time:
+                latest_time = file_creation_time
+                latest_file = file_path
+
+    return latest_file

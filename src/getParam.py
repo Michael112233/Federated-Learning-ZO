@@ -26,9 +26,9 @@ def get_result(filename, algorithm):
     csv_solver.save_excel(current_time, current_grad_times, current_loss, current_round)
 
 
-eta_list = [1e-2, 1e-1, 1, 10, 100]
+eta_list = [1e-3, 1e-2, 1e-1, 1, 10, 100, 1000]
 alpha = 0.5
-model_name = 'svm'
+model_name = 'logistic'
 dataset_list = ['cifar10']
 algorithm_list = ['zeroth', 'FedAvg_SGD', 'FedAvg_GD', 'FedZO']
 memory_length = 5
@@ -62,7 +62,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, verbose)
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, verbose)
-        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
+        # make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         algorithm = FedAvg_SGD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'FedAvg_GD':
@@ -73,7 +73,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 64, verbose)
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000, verbose)
-        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
+        # make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         algorithm = FedAvg_GD(dataset, global_model, para)
         get_result(filename, algorithm)
     elif algorithm_name == 'zeroth':
@@ -88,7 +88,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000,
                              verbose)
-        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
+        # make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         print(filename)
         algorithm = Zeroth_grad(dataset, global_model, para)
         get_result(filename, algorithm)
@@ -103,7 +103,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000,
                              verbose)
-        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
+        # make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         print(filename)
         algorithm = FedAvg_SIGNSGD(dataset, global_model, para)
         get_result(filename, algorithm)
@@ -118,7 +118,7 @@ def generate_csv(dataset_name, algorithm_name, eta, times):
         else:
             para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, 1000,
                              verbose)
-        make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
+        # make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
         print(filename)
         algorithm = FedZO(dataset, global_model, para)
         get_result(filename, algorithm)

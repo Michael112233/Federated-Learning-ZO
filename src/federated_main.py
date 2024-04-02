@@ -13,18 +13,18 @@ from options import args_parser
 from algorithm import FedAvg_SGD, Zeroth_grad, FedAvg_GD, FedAvg_SIGNSGD, FedZO
 from utils import eta_class, parameter, make_dir, excel_solver, select_eta
 
-model_name = "svm" # logistic or svm
-dataset_name = 'cifar10'
+model_name = "logistic" # logistic or svm
+dataset_name = 'mnist'
 algorithm_name = 'zeroth_grad' # zeroth_grad or FedAvg_SGD or FedAvg_GD or FedAvg_SignSGD or FedZO
 dir_mode = 1        # means "performance/experiment"
-
+sample_kind = 1  # iid=0, non_iid=1
 grad_option = 2
 eta_list = eta_class()
 
 if __name__ == '__main__':
     start_time = time.time()
     args = args_parser()
-    eta = select_eta(algorithm_name, dataset_name, model_name)
+    eta = select_eta(algorithm_name, dataset_name, model_name, sample_kind)
     print(eta)
     # initialize
     alpha = 0.5
@@ -34,7 +34,6 @@ if __name__ == '__main__':
     else:
         batch_size = 64
     verbose = True
-    sample_kind = 0  # non_iid=0, iid=1
     eta_type = eta_list.choose(grad_option)
 
     if dataset_name == 'rcv':
@@ -62,7 +61,10 @@ if __name__ == '__main__':
     else:
         print("no found this algorithm")
         exit(0)
-    filename = "./performance/experiment/{}/{}/{}/eta={}/(time={}).csv".format(dataset_name, algorithm_name, model_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
+    if sample_kind == 0:
+        filename = "../performance/experiment/{}/{}/{}/iid/eta={}/(time={}).csv".format(dataset_name, algorithm_name, model_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
+    else:
+        filename = "../performance/experiment/{}/{}/{}/non_iid/eta={}/(time={}).csv".format(dataset_name, algorithm_name, model_name, eta, str(time.strftime('%Y-%m-%d-%H-%M-%S')))
 
     csv_solver = excel_solver(filename)
     print(filename)
