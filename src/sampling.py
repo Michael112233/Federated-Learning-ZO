@@ -44,6 +44,18 @@ class data:
         y_train = self.Y_train[:, 0]
         self.sort_index = np.argsort(y_train)
 
+    def test(self):
+        # x = self.X_train[self.sort_index]
+        # y = self.Y_train[self.sort_index]
+        # tmp = self.sort_index
+        ans = []
+        for i in range(len(self.Y_train)):
+            if self.Y_train[self.sort_index[i]] == 1:
+                ans.append(i)
+            if len(ans) == 10:
+                break
+        print(ans)
+
     def full(self):
         return self.X_train, self.Y_train
     def length(self):
@@ -96,9 +108,9 @@ def get_mnist(model_name):
 
 def get_cifar10(model_name):
     cifar_data = sio.loadmat("../data/cifar10/cifar10.mat")
-    x = cifar_data['Z']
-    y = cifar_data['y']
-    y = (y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
+    x = cifar_data['data']
+    y = cifar_data['fine_labels']
+    y = (y.astype(int) >= 50) * 1  # 将数字>=5样本设为正例，其他数字设为负例
     if model_name == 'svm':
         y = y * 2 - 1
     x = x.reshape((x.shape[0], x.shape[1]))
@@ -154,9 +166,15 @@ def iid_partition(length, num_clients):
     return dict_index
 
 def non_iid_partition(length, num_clients, sort_index):
-    N_per = int(length / num_clients)
+    N_per = int(length / num_clients / 3)
     dict_index = {}
     for i in range(num_clients):
-        dict_index[i] = sort_index[i*N_per:(i+1)*N_per]
+        a = np.arange(i*N_per, (i+1)*N_per)
+        b = np.arange(int(length/3)+i*N_per, int(length/3)+(i+1)*N_per)
+        c = np.arange(int(length*2/3)+i*N_per, int(length*2/3)+(i+1)*N_per)
+        index = np.hstack((a, b))
+        index = np.hstack((index, c))
+        dict_index[i] = sort_index[index]
+        # print(index)
     return dict_index
 

@@ -92,8 +92,12 @@ def select_eta(algorithm_name, dataset_name, model_name, sample_kind):
             else:
                 return 1
         elif algorithm_name == 'FedAvg_GD':
-            if dataset_name == 'cifar10' or dataset_name == 'fashion_mnist':
+            if dataset_name == 'cifar10':
                 return 0.1
+            elif dataset_name == 'fashion_mnist':
+                return 0.1
+            elif dataset_name == 'mnist':
+                return 1
             else:
                 return 1
         elif algorithm_name == 'FedAvg_SGD':
@@ -113,7 +117,7 @@ def select_eta(algorithm_name, dataset_name, model_name, sample_kind):
                 if sample_kind == 0:
                     eta = 5  # non-iid
                 else:
-                    eta = 0.04  # iid
+                    eta = 0.1  # iid
             else:
                 eta = 5
         elif algorithm_name == 'FedAvg_SignSGD':
@@ -128,15 +132,33 @@ def select_eta(algorithm_name, dataset_name, model_name, sample_kind):
                 eta = 20
             elif dataset_name == 'cifar10':
                 eta = 70
+            elif dataset_name == 'mnist':
+                if sample_kind == 0:
+                    eta = 30
+                else:
+                    eta = 1
             else:
                 eta = 30
-        elif dataset_name == 'cifar10':
-            if algorithm_name == 'FedAvg_SGD':
+        elif algorithm_name == 'FedAvg_SGD':
+            if dataset_name == 'cifar10':
                 eta = 30
-            elif algorithm_name == 'FedAvg_GD':
+            elif dataset_name == 'mnist':
+                if sample_kind == 0:
+                    eta = 10
+                else:
+                    eta = 0.1
+            else:
+                eta = 10
+        elif algorithm_name == 'FedAvg_GD':
+            if dataset_name == 'cifar10':
                 eta = 20
-        else:
-            eta = 10
+            elif dataset_name == 'mnist':
+                if sample_kind == 0:
+                    eta = 10
+                else:
+                    eta = 0.5
+            else:
+                eta = 10
     print(eta)
     return eta
 
@@ -165,10 +187,10 @@ class excel_solver:
              'current_loss': current_loss})
         dataframe.to_csv(self.file_path, index=True)
 
-    def save_best_param(self, algorithm, dataset, best_eta, best_loss):
+    def save_best_param(self, algorithm, dataset, best_eta, best_loss, sample_kind, model_name):
         dataframe = pd.DataFrame(
-            {'algorithm': algorithm, 'dataset': dataset, 'best_eta': best_eta,
-             'best_loss': best_loss})
+            {'algorithm': algorithm, 'dataset': dataset, 'model_name': model_name, 'best_eta': best_eta,
+             'best_loss': best_loss, 'sample_kind': sample_kind})
         dataframe.to_csv(self.file_path, index=True)
 
 
@@ -186,6 +208,7 @@ def make_dir(dataset_name, algorithm_name, model_name, params, mode):
     eta = params.eta
     alpha = params.alpha
     memory_length = params.memory_length
+    print(params.sample_kind)
     if params.sample_kind == 0:
         sample_name = "iid"
     else:
@@ -197,10 +220,10 @@ def make_dir(dataset_name, algorithm_name, model_name, params, mode):
         dir_name = "experiment"
     else:
         return
-
+    print('-----mkdir')
     mkdir("../performance")
     mkdir("../performance/{}".format(dir_name))
-
+    mkdir("../performance/{}/{}".format(dir_name, dataset_name))
     mkdir("../performance/{}/{}/{}".format(dir_name, dataset_name, algorithm_name))
     mkdir("../performance/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name))
     mkdir("../performance/{}/{}/{}/{}/{}".format(dir_name, dataset_name, algorithm_name, model_name, sample_name))
@@ -210,12 +233,12 @@ def make_dir(dataset_name, algorithm_name, model_name, params, mode):
         # print(alpha)
         mkdir("../performance/{}/{}/{}/{}/{}/eta={}/alpha={:.2}".format(dir_name, dataset_name, algorithm_name,
                                                                         model_name, sample_name,
-                                                                        eta, alpha))
+                                                                        eta, float(alpha)))
         mkdir(
             "../performance/{}/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(dir_name, dataset_name,
                                                                                        algorithm_name, model_name,
                                                                                        sample_name,
-                                                                                       eta, alpha, memory_length))
+                                                                                       eta, float(alpha), memory_length))
 
 
 import os

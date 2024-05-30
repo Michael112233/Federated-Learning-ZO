@@ -17,6 +17,7 @@ def get_loss(global_model, dataset, weights, current_round, verbose):
 
 class FedAvg_GD:
     def __init__(self, dataset, global_model, option):
+        self.sample_kind = option.sample_kind
         self.client_rate = option.client_rate
         self.client_number = option.client_number
         self.local_iteration = option.local_iteration
@@ -49,8 +50,8 @@ class FedAvg_GD:
 
     def update_client(self, current_weights, chosen_index, current_round=0):
         for i in range(self.local_iteration):
-            X = self.dataset.X[chosen_index]
-            Y = self.dataset.Y[chosen_index]
+            X = self.dataset.X_train[chosen_index]
+            Y = self.dataset.Y_train[chosen_index]
             # calculate gradient
             v_matrix = np.random.randn(self.global_model.len(), 1)
             upper_val = self.global_model.loss((current_weights + self.radius * v_matrix), X, Y)
@@ -74,7 +75,13 @@ class FedAvg_GD:
         client_index = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
-        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        if self.sample_kind == 0:  # iid
+            partition_index = iid_partition(self.dataset.length(), self.client_number)
+        else:  # non-iid
+            self.dataset.sort()
+            self.dataset.test()
+            partition_index = non_iid_partition(self.dataset.length(), self.client_number, self.dataset.sort_index)
+
         for i in range(self.client_number):
             client_index.append(i)
 
@@ -107,6 +114,7 @@ class FedAvg_GD:
 
 class FedAvg_SIGNSGD:
     def __init__(self, dataset, global_model, option):
+        self.sample_kind = option.sample_kind
         self.client_rate = option.client_rate
         self.client_number = option.client_number
         self.local_iteration = option.local_iteration
@@ -172,7 +180,12 @@ class FedAvg_SIGNSGD:
         client_index = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
-        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        if self.sample_kind == 0:  # iid
+            partition_index = iid_partition(self.dataset.length(), self.client_number)
+        else:  # non-iid
+            self.dataset.sort()
+            partition_index = non_iid_partition(self.dataset.length(), self.client_number, self.dataset.sort_index)
+
         for i in range(self.client_number):
             client_index.append(i)
 
@@ -207,6 +220,7 @@ class FedAvg_SIGNSGD:
 
 class FedZO:
     def __init__(self, dataset, global_model, option):
+        self.sample_kind = option.sample_kind
         self.client_rate = option.client_rate
         self.client_number = option.client_number
         self.local_iteration = option.local_iteration
@@ -275,7 +289,12 @@ class FedZO:
         client_index = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
-        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        if self.sample_kind == 0:  # iid
+            partition_index = iid_partition(self.dataset.length(), self.client_number)
+        else:  # non-iid
+            self.dataset.sort()
+            partition_index = non_iid_partition(self.dataset.length(), self.client_number, self.dataset.sort_index)
+
         for i in range(self.client_number):
             client_index.append(i)
 
@@ -307,6 +326,7 @@ class FedZO:
 
 class FedAvg_SGD:
     def __init__(self, dataset, global_model, option):
+        self.sample_kind = option.sample_kind
         self.client_rate = option.client_rate
         self.client_number = option.client_number
         self.local_iteration = option.local_iteration
@@ -366,7 +386,12 @@ class FedAvg_SGD:
         client_index = []
         weights = np.ones(self.global_model.len()).reshape(-1, 1)
         # 划分客户端训练集
-        partition_index = iid_partition(self.dataset.length(), self.client_number)
+        if self.sample_kind == 0:  # iid
+            partition_index = iid_partition(self.dataset.length(), self.client_number)
+        else:  # non-iid
+            self.dataset.sort()
+            partition_index = non_iid_partition(self.dataset.length(), self.client_number, self.dataset.sort_index)
+
         for i in range(self.client_number):
             client_index.append(i)
 

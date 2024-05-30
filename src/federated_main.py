@@ -5,7 +5,10 @@ import copy
 import math
 import random
 import time
+from multiprocessing import freeze_support, Pool
+
 import numpy as np
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 from sampling import get_cifar10, get_rcv1, get_mnist, get_fashion_mnist
@@ -13,22 +16,23 @@ from options import args_parser
 from algorithm import FedAvg_SGD, Zeroth_grad, FedAvg_GD, FedAvg_SIGNSGD, FedZO
 from utils import eta_class, parameter, make_dir, excel_solver, select_eta
 
-model_name = "logistic" # logistic or svm
-dataset_name = 'mnist'
-algorithm_name = 'zeroth_grad' # zeroth_grad or FedAvg_SGD or FedAvg_GD or FedAvg_SignSGD or FedZO
+# model_name = "svm" # logistic or svm
+# dataset_name = 'fashion_mnist'
+# algorithm_name = 'zeroth' # zeroth or FedAvg_SGD or FedAvg_GD or FedAvg_SignSGD or FedZO
 dir_mode = 1        # means "performance/experiment"
-sample_kind = 1  # iid=0, non_iid=1
+# sample_kind = 1  # iid=0, non_iid=1
 grad_option = 2
 eta_list = eta_class()
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def operate(model_name, dataset_name, algorithm_name, eta, sample_kind):
     start_time = time.time()
-    args = args_parser()
-    eta = select_eta(algorithm_name, dataset_name, model_name, sample_kind)
+    # args = args_parser()
+    eta = 1
     print(eta)
     # initialize
-    alpha = 0.5
-    memory_length = 5
+    alpha = 0.3
+    memory_length = 15
     if dataset_name == 'rcv':
         batch_size = 1000
     else:
@@ -44,11 +48,11 @@ if __name__ == '__main__':
         dataset, X, Y, global_model = get_fashion_mnist(model_name)
     else:
         dataset, X, Y, global_model = get_mnist(model_name)
-    max_grad_time = 2000 * dataset.length()
+    max_grad_time = 3000 * dataset.length()
 
     para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose, sample_kind)
     make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
-    if algorithm_name == 'zeroth_grad':
+    if algorithm_name == 'zeroth':
         algorithm = Zeroth_grad(dataset, global_model, para)
     elif algorithm_name == 'FedAvg_GD':
         algorithm = FedAvg_GD(dataset, global_model, para)
@@ -74,3 +78,22 @@ if __name__ == '__main__':
     # end_time = time.time()
     # print("total time is {:.3f}".format(end_time-start_time))
     # print("total grad times is {:.2f}".format(total_grad))
+
+
+if __name__ == '__main__':
+    freeze_support()
+    eta_list = np.array(pd.read_csv('../performance/sum_up/eta/eta_info.csv'))
+    combine = []
+    for eta_line in eta_list:
+        # print(eta_line)
+        eta = eta_line[4]
+        algorithm_name = eta_line[1]
+        model_name = eta_line[3]
+        dataset_name = eta_line[2]
+        sample_kind = eta_line[6]
+        combine.append(copy.deepcopy([model_name, dataset_name, algorithm_name, eta, sample_kind]))
+        print([model_name, dataset_name, algorithm_name, eta, sample_kind])
+    with Pool(10) as p:
+        # ans = p.starmap(generate_csv, zip(dataset_list, algorithm_list, eta_list, times_list))
+        ans = p.starmap(operate, combine)
+        print(ans)
