@@ -10,7 +10,8 @@ from scipy.sparse import hstack, csr_matrix
 from sklearn.datasets import load_svmlight_file
 import scipy.io as sio
 
-from models import LRmodel, SVM
+from models import LRmodel, SVM, NeuralNetwork
+from src.utils import parameter, hidden_layer
 
 
 class data:
@@ -64,7 +65,7 @@ class data:
 def get_rcv1(model_name):
     X, Y = load_svmlight_file('../data/rcv/rcv1_test.binary')
     Y = Y.reshape(-1, 1)
-    if model_name == "logistic":
+    if model_name == "logistic" or model_name == 'neural_network':
         Y = (Y + 1) / 2
     # 创建全为1的列向量，作为偏置项列
     bias_column = np.ones(X.shape[0])
@@ -79,8 +80,10 @@ def get_rcv1(model_name):
     Y = dataset.Y_train
     if model_name == "svm":
         global_model = SVM(X.shape[1], True)
-    else:
+    elif model_name == 'logistic':
         global_model = LRmodel(X.shape[1], True)
+    else:
+        global_model = NeuralNetwork(X.shape[1], hidden_layer, 1)
     return dataset, X, Y, global_model
 
 def get_mnist(model_name):
@@ -102,15 +105,17 @@ def get_mnist(model_name):
     # print(X.shape)
     if model_name == "svm":
         global_model = SVM(X.shape[1])
-    else:
+    elif model_name == 'logistic':
         global_model = LRmodel(X.shape[1])
+    else:
+        global_model = NeuralNetwork(X.shape[1], hidden_layer, 1)
     return dataset, X, Y, global_model
 
 def get_cifar10(model_name):
     cifar_data = sio.loadmat("../data/cifar10/cifar10.mat")
     x = cifar_data['data']
-    y = cifar_data['fine_labels']
-    y = (y.astype(int) >= 50) * 1  # 将数字>=5样本设为正例，其他数字设为负例
+    y = cifar_data['labels']
+    y = (y.astype(int) >= 5) * 1  # 将数字>=5样本设为正例，其他数字设为负例
     if model_name == 'svm':
         y = y * 2 - 1
     x = x.reshape((x.shape[0], x.shape[1]))
@@ -125,10 +130,12 @@ def get_cifar10(model_name):
     X = dataset.X_train
     Y = dataset.Y_train
     # print(X.shape)
-    if model_name == 'logistic':
-        global_model = LRmodel(X.shape[1])
+    if model_name == "svm":
+        global_model = SVM(X.shape[1], True)
+    elif model_name == 'logistic':
+        global_model = LRmodel(X.shape[1], True)
     else:
-        global_model = SVM(X.shape[1])
+        global_model = NeuralNetwork(X.shape[1], hidden_layer, 1)
     return dataset, X, Y, global_model
 
 def get_fashion_mnist(model_name):
@@ -151,10 +158,12 @@ def get_fashion_mnist(model_name):
     dataset = data(X, Y, 0.8)
     X = dataset.X_train
     Y = dataset.Y_train
-    if model_name == 'svm':
+    if model_name == "svm":
         global_model = SVM(X.shape[1], True)
-    else:
+    elif model_name == 'logistic':
         global_model = LRmodel(X.shape[1], True)
+    else:
+        global_model = NeuralNetwork(X.shape[1], hidden_layer, 1)
     return dataset, X, Y, global_model
 
 def iid_partition(length, num_clients):

@@ -5,6 +5,8 @@ import math
 import csv
 import os
 import time
+
+import numpy as np
 import pandas as pd
 
 
@@ -24,6 +26,7 @@ def judge_whether_print(current_round):
 
 
 # 参数类，用于传递超参数以及超参数集中化
+hidden_layer = 50
 class parameter:
     def __init__(self, max_grad_time, eta_type=1, eta=0.1, alpha=0.5, memory_length=5, batch_size=1000,
                  verbose=True, sample_kind=0):
@@ -38,7 +41,7 @@ class parameter:
         self.client_number = 100
         self.local_iteration = 50  # origin 50, 10
         self.total_grad = 0
-        self.iteration = 400000
+        self.iteration = 30000
         self.radius = 1e-4
         self.sample_kind = sample_kind  # 0 for iid, 1 for non_iid
 
@@ -65,103 +68,45 @@ class eta_class:
             return self.divide_eta
 
 
-def select_eta(algorithm_name, dataset_name, model_name, sample_kind):
-    eta = 10
-    if model_name == 'svm':
-        if algorithm_name == 'FedAvg_SignSGD':
-            if dataset_name == 'mnist':
-                return 1e-3
-            elif dataset_name == 'rcv':
-                return 1e-2
-            else:
-                return 1e-2
-        elif algorithm_name == 'FedZO':
-            if dataset_name == 'cifar10':
-                return 0.1
-            if dataset_name == 'rcv':
-                return 5
-            else:
-                return 1
-        elif algorithm_name == 'zeroth_grad':
-            if dataset_name == 'cifar10':
-                return 0.1
-            elif dataset_name == 'fashion_mnist':
-                return 0.1
-            elif dataset_name == 'mnist':
-                return 0.1
-            else:
-                return 1
-        elif algorithm_name == 'FedAvg_GD':
-            if dataset_name == 'cifar10':
-                return 0.1
-            elif dataset_name == 'fashion_mnist':
-                return 0.1
-            elif dataset_name == 'mnist':
-                return 1
-            else:
-                return 1
-        elif algorithm_name == 'FedAvg_SGD':
-            if dataset_name == 'cifar10' or dataset_name == 'fashion_mnist' or dataset_name == 'mnist':
-                return 0.1
-            else:
-                return 1
-    else:
-        if algorithm_name == 'zeroth_grad':
-            if dataset_name == 'rcv':
-                eta = 10
-            elif dataset_name == 'fashion_mnist':
-                eta = 2
-            elif dataset_name == 'cifar10':
-                eta = 5
-            elif dataset_name == 'mnist':
-                if sample_kind == 0:
-                    eta = 5  # non-iid
-                else:
-                    eta = 0.1  # iid
-            else:
-                eta = 5
-        elif algorithm_name == 'FedAvg_SignSGD':
-            if dataset_name == 'rcv':
-                eta = 0.01
-            else:
-                eta = 0.003
-        elif algorithm_name == 'FedZO':
-            if dataset_name == 'rcv':
-                eta = 50
-            elif dataset_name == 'fashion_mnist':
-                eta = 20
-            elif dataset_name == 'cifar10':
-                eta = 70
-            elif dataset_name == 'mnist':
-                if sample_kind == 0:
-                    eta = 30
-                else:
-                    eta = 1
-            else:
-                eta = 30
-        elif algorithm_name == 'FedAvg_SGD':
-            if dataset_name == 'cifar10':
-                eta = 30
-            elif dataset_name == 'mnist':
-                if sample_kind == 0:
-                    eta = 10
-                else:
-                    eta = 0.1
-            else:
-                eta = 10
-        elif algorithm_name == 'FedAvg_GD':
-            if dataset_name == 'cifar10':
-                eta = 20
-            elif dataset_name == 'mnist':
-                if sample_kind == 0:
-                    eta = 10
-                else:
-                    eta = 0.5
-            else:
-                eta = 10
-    print(eta)
-    return eta
+def get_eta(dataset_name, model_name, algorithm_name, sample_kind):
+    eta_file = pd.read_csv('../performance/sum_up/eta/eta_info.csv')
+    eta_infos = np.array(eta_file)
+    for eta_info in eta_infos:
+        cur_dataset = eta_info[2]
+        cur_algorithm = eta_info[1]
+        cur_model = eta_info[3]
+        cur_eta = eta_info[4]
+        cur_sample_kind = num2kind(eta_info[6])
+        # print(eta_info)
+        if dataset_name == cur_dataset and cur_algorithm == algorithm_name and cur_model == model_name and cur_sample_kind == sample_kind:
+            return cur_eta
+    return -1
 
+def get_file_name(dataset_name, model_name, algorithm_name, sample_kind):
+    csv_path = "../performance/experiment/{}/{}/{}/{}".format(dataset_name, algorithm_name, model_name, sample_kind)
+    print(os.walk(csv_path))
+    min_eta = 1000000
+    min_path = ""
+    for subdir, dirs, files in os.walk(csv_path):
+        # print(subdir, dirs, files)
+        for file in files:
+            if file.endswith('.csv'):
+                # 构建文件的完整路径
+                file_path = os.path.join(subdir, file)
+                print(file_path)
+                # 读取CSV文件
+                data = pd.read_csv(file_path)
+                # 获取最后一列的数据
+                last_column = data.iloc[:, -1]
+                print(last_column[len(last_column)-1])
+                if last_column[len(last_column)-1] < min_eta:
+                    min_eta = last_column[len(last_column)-1]
+                    min_path = file_path
+                print(file_path, min_eta)
+    # print(min_path)
+    print(csv_path)
+
+    return min_path
 
 # 单次实验最终结果的输出
 def end_info(start_time, total_grad):
@@ -247,8 +192,9 @@ import os
 def find_latest_path(folder):
     latest_file = None
     latest_time = 0
-
+    print(folder)
     for root, dirs, files in os.walk(folder):
+        print(files)
         for file in files:
             file_path = os.path.join(root, file)
             # 获取文件的创建时间
@@ -259,3 +205,10 @@ def find_latest_path(folder):
                 latest_file = file_path
 
     return latest_file
+
+
+def num2kind(number):
+    if number == 1:
+        return "non_iid"
+    else:
+        return "iid"

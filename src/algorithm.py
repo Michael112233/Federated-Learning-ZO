@@ -3,8 +3,20 @@ import random
 import time
 import numpy as np
 from sampling import iid_partition, non_iid_partition
+from src import models
+# from src.models import NeuralNetwork
 from utils import end_info, excel_solver, judge_whether_print
 
+def init_weight(model):
+    # thistype = model.modelName()
+    # #
+    # # typeis = type(model)
+    # # print(f"Type of model: {typeis}")
+    #
+    # if thistype != 'svm':
+    #     return np.zeros(model.len()).reshape(-1, 1)
+    # else:
+    return np.ones(model.len()).reshape(-1, 1)
 
 def get_loss(global_model, dataset, weights, current_round, verbose):
     Xfull, Yfull = dataset.full()
@@ -73,7 +85,7 @@ class FedAvg_GD:
 
     def alg_run(self, start_time):
         client_index = []
-        weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        weights = init_weight(self.global_model)
         # 划分客户端训练集
         if self.sample_kind == 0:  # iid
             partition_index = iid_partition(self.dataset.length(), self.client_number)
@@ -287,7 +299,7 @@ class FedZO:
 
     def alg_run(self, start_time):
         client_index = []
-        weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        weights = init_weight(self.global_model)
         # 划分客户端训练集
         if self.sample_kind == 0:  # iid
             partition_index = iid_partition(self.dataset.length(), self.client_number)
@@ -363,8 +375,6 @@ class FedAvg_SGD:
             # calculate gradient
             # v_matrix = np.random.normal(loc=0, scale=1, size=(self.global_model.len(), 1))
             v_matrix = np.random.randn(self.global_model.len(), 1)
-            up = (current_weights + self.radius * v_matrix)
-            down = (current_weights - self.radius * v_matrix)
             upper_val = self.global_model.loss((current_weights + self.radius * v_matrix), X, Y)
             lower_val = self.global_model.loss((current_weights - self.radius * v_matrix), X, Y)
             # print(self.global_model.loss((weights), X, Y))
@@ -384,7 +394,7 @@ class FedAvg_SGD:
 
     def alg_run(self, start_time):
         client_index = []
-        weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        weights = init_weight(copy.deepcopy(self.global_model))
         # 划分客户端训练集
         if self.sample_kind == 0:  # iid
             partition_index = iid_partition(self.dataset.length(), self.client_number)
@@ -412,12 +422,12 @@ class FedAvg_SGD:
 
             weights = self.average(weights_list)
 
+            # if (i + 1) % 100 == 0:
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
                 self.save_info(start_time, weights, i + 1)
                 # print("{} {}".format())
                 if self.total_grad >= self.max_grad_time:
                     break
-
         end_info(start_time, self.total_grad)
         return self.current_time, self.current_grad_times, self.current_loss, self.current_round
 
@@ -505,7 +515,7 @@ class Zeroth_grad:
 
     def alg_run(self, start_time):
         client_index = []
-        weights = np.ones(self.global_model.len()).reshape(-1, 1)
+        weights = init_weight(self.global_model)
         self.save_info(start_time, weights, 0)
         # 划分客户端训练集
         if self.sample_kind == 0:  # iid
@@ -529,6 +539,7 @@ class Zeroth_grad:
 
             weights = self.average(weights_list)
             if self.total_grad >= self.max_grad_time or judge_whether_print(i + 1) == True:
+            # if (i+1) % 100 == 0:
                 self.save_info(start_time, weights, i + 1)
                 if self.total_grad >= self.max_grad_time:
                     break

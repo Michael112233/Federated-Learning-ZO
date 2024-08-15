@@ -3,6 +3,7 @@
 # Python version: 3.6
 import copy
 import math
+import os
 import random
 import time
 from multiprocessing import freeze_support, Pool
@@ -14,7 +15,7 @@ from sklearn.linear_model import LogisticRegression
 from sampling import get_cifar10, get_rcv1, get_mnist, get_fashion_mnist
 from options import args_parser
 from algorithm import FedAvg_SGD, Zeroth_grad, FedAvg_GD, FedAvg_SIGNSGD, FedZO
-from utils import eta_class, parameter, make_dir, excel_solver, select_eta
+from utils import eta_class, parameter, make_dir, excel_solver, num2kind
 
 # model_name = "svm" # logistic or svm
 # dataset_name = 'fashion_mnist'
@@ -26,13 +27,13 @@ eta_list = eta_class()
 
 # if __name__ == '__main__':
 def operate(model_name, dataset_name, algorithm_name, eta, sample_kind):
+    sample_kind_name = num2kind(sample_kind)
+    # print(os.listdir(path))
     start_time = time.time()
     # args = args_parser()
-    eta = 1
-    print(eta)
     # initialize
     alpha = 0.3
-    memory_length = 15
+    memory_length = 5
     if dataset_name == 'rcv':
         batch_size = 1000
     else:
@@ -48,7 +49,7 @@ def operate(model_name, dataset_name, algorithm_name, eta, sample_kind):
         dataset, X, Y, global_model = get_fashion_mnist(model_name)
     else:
         dataset, X, Y, global_model = get_mnist(model_name)
-    max_grad_time = 3000 * dataset.length()
+    max_grad_time = 30000 * dataset.length()
 
     para = parameter(max_grad_time, eta_type, eta, alpha, memory_length, batch_size, verbose, sample_kind)
     make_dir(dataset_name, algorithm_name, model_name, para, dir_mode)
@@ -81,18 +82,40 @@ def operate(model_name, dataset_name, algorithm_name, eta, sample_kind):
 
 
 if __name__ == '__main__':
+    # for i in range(5):
+        # operate('neural_network', 'rcv', 'FedZO', 1, 1)
+        # operate('neural_network', 'rcv', 'FedAvg_SGD', 1, 1)
+        # operate('neural_network', 'rcv', 'FedAvg_GD', 1, 1)
+    # operate('logistic', 'cifar10', 'FedZO', 1, 1)
     freeze_support()
-    eta_list = np.array(pd.read_csv('../performance/sum_up/eta/eta_info.csv'))
+    # eta_list = np.array(pd.read_csv('../performance/sum_up/eta/eta_info.csv'))
     combine = []
-    for eta_line in eta_list:
-        # print(eta_line)
-        eta = eta_line[4]
-        algorithm_name = eta_line[1]
-        model_name = eta_line[3]
-        dataset_name = eta_line[2]
-        sample_kind = eta_line[6]
-        combine.append(copy.deepcopy([model_name, dataset_name, algorithm_name, eta, sample_kind]))
-        print([model_name, dataset_name, algorithm_name, eta, sample_kind])
+    # for eta_line in eta_list:
+    algorithm_name_list = ['FedAvg_SGD', 'FedAvg_GD', 'FedZO', 'zeroth']
+    model_name_list = ['logistic', 'neural_network']
+    sample_kind_list = [0, 1]
+    for algorithm_name in algorithm_name_list:
+        for model_name in model_name_list:
+            for sample_kind in sample_kind_list:
+                # print(eta_line)
+                # eta = eta_line[4]
+                eta = 1
+                # algorithm_name = eta_line[1]
+                # model_name = eta_line[3]
+                # dataset_name = eta_line[2]
+                # sample_kind = eta_line[6]
+                dataset_name = 'cifar10'
+                sample_kind_name = num2kind(sample_kind)
+                # if dataset_name == 'cifar10':
+                #     continue
+                path = "../performance/experiment/{}/{}/{}/{}/eta={}".format(dataset_name, algorithm_name, model_name,
+                                                                     sample_kind_name, eta)
+
+                # if os.listdir(path):
+                #     continue
+                combine.append(copy.deepcopy([model_name, dataset_name, algorithm_name, eta, sample_kind]))
+                # operate(model_name, dataset_name, algorithm_name, eta, sample_kind)
+                print([model_name, dataset_name, algorithm_name, eta, sample_kind])
     with Pool(10) as p:
         # ans = p.starmap(generate_csv, zip(dataset_list, algorithm_list, eta_list, times_list))
         ans = p.starmap(operate, combine)

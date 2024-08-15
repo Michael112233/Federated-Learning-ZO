@@ -1,51 +1,68 @@
+from datetime import datetime
 import math
+import time
 
 import matplotlib.pyplot as plt
+import matplotlib
 import pandas as pd
 import numpy as np
 
-from src.utils import find_latest_path
+from src.utils import find_latest_path, get_eta, get_file_name, mkdir
 
-dataset_name = "fashion_mnist"
-model_name = "svm"
+matplotlib.use('TkAgg')
 
-# ./performance/experiment/rcv/FedAvg_GD/logistic/eta=10/(time=2023-11-27-23-32-30).csv
+dataset_name_list = ['rcv']
+model_name_list = ["neural_network"]
+iid_info_list = ['non_iid']
 
-fedavg_GD = pd.read_csv(find_latest_path("../performance/experiment/" + dataset_name + "/FedAvg_GD/" + model_name + "/"))
-fes1 = np.array(fedavg_GD['current_grad_times'])
-loss1 = np.array(fedavg_GD['current_loss'])
-# fes1[0] += 1
-plt.semilogy(fes1, loss1, label="fedavg_GD")
+# dataset_name = "mnist"
+# model_name = "neural_network"
+# iid_info = "non_iid"  # non-iid -> 1, iid -> 0
+for dataset_name in dataset_name_list:
+    for model_name in model_name_list:
+        for iid_info in iid_info_list:
+            plt.clf()
 
-# ./performance/experiment/rcv/FedAvg_SGD/logistic/eta=10/(time=2023-11-27-23-32-04).csv
-fedavg_SGD = pd.read_csv(find_latest_path("../performance/experiment/" + dataset_name + "/FedAvg_SGD/" + model_name + "/"))
+            now = datetime.now()
+            save_path = '../performance/graphs/{}/{}/{}/{}.jpg'.format(dataset_name, model_name, iid_info, now.strftime('%Y-%m-%d-%H-%M-%S'))
 
-fes5 = np.array(fedavg_SGD['current_grad_times'])
-loss5 = np.array(fedavg_SGD['current_loss'])
-# fes5[0] += 1
-plt.semilogy(fes5, loss5, label="fedavg_SGD")
+            mkdir("../performance/graphs")
+            mkdir("../performance/graphs/{}".format(dataset_name))
+            mkdir("../performance/graphs/{}/{}".format(dataset_name, model_name))
+            mkdir("../performance/graphs/{}/{}/{}".format(dataset_name, model_name, iid_info))
 
-# ./performance/experiment/rcv/zeroth_grad/logistic/eta=25/(time=2023-11-27-23-31-38).csv
-subspace = pd.read_csv(find_latest_path("../performance/experiment/" + dataset_name + "/zeroth_grad/" + model_name + "/"))
-fes2 = np.array(subspace['current_grad_times'])
-loss2 = np.array(subspace['current_loss'])
-# fes2[0] += 1
-plt.semilogy(fes2, loss2, label="FedSGES")
+            # FedAvg_GD
+            fedavg_GD = pd.read_csv(get_file_name(dataset_name, model_name, 'FedAvg_GD', iid_info))
+            fes1 = np.array(fedavg_GD['current_grad_times'])
+            loss1 = np.array(fedavg_GD['current_loss'])
+            plt.semilogy(fes1, loss1, label="fedavg_GD")
 
-# ./performance/experiment/rcv/FedZO/logistic/eta=50/(time=2023-11-27-23-32-52).csv
-fedzo = pd.read_csv(find_latest_path("../performance/experiment/" + dataset_name + "/FedZO/" + model_name + "/"))
-fes3 = np.array(fedzo['current_grad_times'])
-loss3 = np.array(fedzo['current_loss'])
-# fes3[0] += 1
-plt.semilogy(fes3, loss3, color="grey", label="fedzo")
+            # FedAvg_SGD
+            fedavg_SGD = pd.read_csv(get_file_name(dataset_name, model_name, 'FedAvg_SGD', iid_info))
+            # fedavg_SGD = pd.read_csv('../performance/experiment/fashion_mnist/FedAvg_SGD/neural_network/iid/eta=1/(time=2024-07-20-21-37-33).csv')
+            fes5 = np.array(fedavg_SGD['current_grad_times'])
+            loss5 = np.array(fedavg_SGD['current_loss'])
+            plt.semilogy(fes5, loss5, label="fedavg_SGD")
+
+            # Zeroth-order
+            subspace = pd.read_csv(get_file_name(dataset_name, model_name, 'zeroth', iid_info))
+            fes2 = np.array(subspace['current_grad_times'])
+            loss2 = np.array(subspace['current_loss'])
+            plt.semilogy(fes2, loss2, label="FedSGES")
+
+            # fed
+            fedzo = pd.read_csv(get_file_name(dataset_name, model_name, 'FedZO', iid_info))
+            fes3 = np.array(fedzo['current_grad_times'])
+            loss3 = np.array(fedzo['current_loss'])
+            # fes3[0] += 1
+            plt.semilogy(fes3, loss3, color="grey", label="fedzo")
 
 
-plt.xlabel("FES")
-plt.ylabel("loss")
-plt.title(model_name + " model, " + dataset_name + " dataset")
+            plt.xlabel("FES")
+            plt.ylabel("loss")
+            plt.title(model_name + " model, " + dataset_name + " dataset, " + iid_info)
 
-# plt.xlim(0, 0.2*1e8)
+            # plt.xlim(0, 0.2*1e8)
 
-plt.legend()
-plt.show()
-
+            plt.legend()
+            plt.savefig(save_path)

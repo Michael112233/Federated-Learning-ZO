@@ -31,9 +31,9 @@ def get_result(filename, algorithm):
 
 eta_list = [1e-3, 1e-2, 1e-1, 1, 10, 100]
 alpha_list = [0.3]
-model_name_list = ['logistic', 'svm']
+model_name_list = ['neural_network']
 sample_kind_list = [0, 1]
-dataset_list = ['cifar10', 'rcv', 'mnist', 'fashion_mnist']
+dataset_list = ['fashion_mnist', 'mnist', 'rcv', 'cifar10']
 algorithm_list = ['FedAvg_SGD', 'zeroth', 'FedAvg_GD', 'FedZO']  #'zeroth', 'FedAvg_SGD', 'FedAvg_GD', 'FedZO'
 memory_length_list = [5]
 times_list = range(1, 4)
@@ -55,7 +55,7 @@ def generate_csv(dataset_name, algorithm_name, model_name, eta, times, alpha, me
         dataset, X, Y, global_model = get_fashion_mnist(model_name)
     else:
         dataset, X, Y, global_model = get_mnist(model_name)
-    max_grad_time = 500 * dataset.length()
+    max_grad_time = 300 * dataset.length()
     if sample_kind == 0:
         sample_name = "iid"
     else:
@@ -156,7 +156,7 @@ def get_eta_params():
                         else:
                             for times in times_list:
                                 print(dataset_name, algorithm_name, model_name, eta, times, 0, 0, sample_kind)
-                                # generate_csv(dataset_name, algorithm_name, model_name, eta, times, alpha, memory_length)
+                                # generate_csv(dataset_name, algorithm_name, model_name, eta, times, 0, 0, sample_kind)
                                 combine.append([dataset_name, algorithm_name, model_name, eta, times, 0, 0, sample_kind])
 
     with Pool(10) as p:
@@ -170,19 +170,19 @@ def get_eta_params():
 
 def get_zeroth_params():
     combine = []
-    algorithm_name = 'zeroth'
     for sample_kind in sample_kind_list:
         for dataset_name in dataset_list:
             for model_name in model_name_list:
-                for eta in eta_list:
-                    for memory_length in memory_length_list:
-                        for alpha in alpha_list:
-                            for times in times_list:
-                                print(dataset_name, algorithm_name, model_name, eta, times, alpha,
-                                      memory_length, sample_kind)
-                                combine.append(
-                                    [dataset_name, algorithm_name, model_name, eta, times, alpha, memory_length,
-                                     sample_kind])
+                for algorithm_name in algorithm_list:
+                    for eta in eta_list:
+                        for memory_length in memory_length_list:
+                            for alpha in alpha_list:
+                                for times in times_list:
+                                    print(dataset_name, algorithm_name, model_name, eta, times, alpha,
+                                          memory_length, sample_kind)
+                                    combine.append(
+                                        [dataset_name, algorithm_name, model_name, eta, times, alpha, memory_length,
+                                         sample_kind])
     with Pool(10) as p:
         # ans = p.starmap(generate_csv, zip(dataset_list, algorithm_list, eta_list, times_list))
         ans = p.starmap(generate_csv, combine)
@@ -234,6 +234,7 @@ def summary_csv():
                         # print("{} {} eta={} memory_length={} alpha={} loss is {}\n".format(dataset_name, algorithm_name,
                         #                                                            best_eta, memory_length,
                         #                                                            alpha, best_loss))
+                    print(model_name, sample_kind, dataset_name, algorithm_name)
                     current_best_eta_list.append(copy.deepcopy(best_eta))
                     current_best_loss_list.append(copy.deepcopy(best_loss))
                     current_best_model_list.append(copy.deepcopy(model_name))
@@ -252,7 +253,7 @@ def sum_up_param():
 
 if __name__ == '__main__':
     freeze_support()
-    # get_eta_params()
+    get_eta_params()
     # get_zeroth_params()
     summary_csv()
     sum_up_param()
