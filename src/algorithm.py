@@ -8,15 +8,11 @@ from src import models
 from utils import end_info, excel_solver, judge_whether_print
 
 def init_weight(model):
-    # thistype = model.modelName()
-    # #
-    # # typeis = type(model)
-    # # print(f"Type of model: {typeis}")
-    #
-    # if thistype != 'svm':
-    #     return np.zeros(model.len()).reshape(-1, 1)
-    # else:
-    return np.ones(model.len()).reshape(-1, 1)
+    thistype = model.modelName()
+    if thistype == 'svm':
+        return np.ones(model.len()).reshape(-1, 1)
+    else:
+        return np.zeros(model.len()).reshape(-1, 1)
 
 def get_loss(global_model, dataset, weights, current_round, verbose):
     Xfull, Yfull = dataset.full()
@@ -483,6 +479,7 @@ class Zeroth_grad:
                 v_matrix = np.sqrt(1 - self.alpha) * z0 + np.sqrt(
                     self.alpha * self.global_model.len() / self.memory_length) * self.p_matrix.dot(
                     z1)
+                # v_matrix = np.sqrt(1 - self.alpha) * z0 + np.sqrt(self.alpha) * self.p_matrix.dot(z1)
             # calculate gradient
             upper_val = self.global_model.loss((current_weights + self.radius * v_matrix), X, Y)
             lower_val = self.global_model.loss((current_weights - self.radius * v_matrix), X, Y)

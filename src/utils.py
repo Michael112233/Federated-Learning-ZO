@@ -132,10 +132,10 @@ class excel_solver:
              'current_loss': current_loss})
         dataframe.to_csv(self.file_path, index=True)
 
-    def save_best_param(self, algorithm, dataset, best_eta, best_loss, sample_kind, model_name):
+    def save_best_param(self, algorithm, dataset, best_eta, best_loss, sample_kind, model_name, filename):
         dataframe = pd.DataFrame(
             {'algorithm': algorithm, 'dataset': dataset, 'model_name': model_name, 'best_eta': best_eta,
-             'best_loss': best_loss, 'sample_kind': sample_kind})
+             'best_loss': best_loss, 'sample_kind': sample_kind, 'file_name': filename})
         dataframe.to_csv(self.file_path, index=True)
 
 

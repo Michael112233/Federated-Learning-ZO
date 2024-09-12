@@ -15,6 +15,7 @@ current_dataset_name_list = []
 current_algorithm_name_list = []
 current_best_eta_list = []
 current_best_loss_list = []
+current_best_filename_list = []
 current_best_sample_list = []
 current_best_model_list = []
 
@@ -29,11 +30,11 @@ def get_result(filename, algorithm):
     csv_solver.save_excel(current_time, current_grad_times, current_loss, current_round)
 
 
-eta_list = [1e-3, 1e-2, 1e-1, 1, 10, 100]
+eta_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 alpha_list = [0.3]
 model_name_list = ['neural_network']
 sample_kind_list = [0, 1]
-dataset_list = ['fashion_mnist', 'mnist', 'rcv', 'cifar10']
+dataset_list = ['rcv']
 algorithm_list = ['FedAvg_SGD', 'zeroth', 'FedAvg_GD', 'FedZO']  #'zeroth', 'FedAvg_SGD', 'FedAvg_GD', 'FedZO'
 memory_length_list = [5]
 times_list = range(1, 4)
@@ -196,40 +197,49 @@ def summary_csv():
                 for model_name in model_name_list:
                     best_loss = 1000000
                     best_eta = -1
+                    best_filename = ''
                     g = 0
                     current_loss_list = []
+                    current_loss_filename = []
                     for eta in eta_list:
                         if sample_kind == 1:
                             sample_name = 'non_iid'
                         else:
                             sample_name = 'iid'
-                        if algorithm_name == "zeroth":
-                            for alpha in alpha_list:
-                                for memory_length in memory_length_list:
-                                    g = os.walk(r"../performance/params/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(
-                                                dataset_name,
-                                                algorithm_name,
-                                                model_name, sample_name,
-                                                eta, float(alpha),
-                                                memory_length))
-                        else:
-                            g = os.walk(r"../performance/params/{}/{}/{}/{}/eta={}".format(dataset_name, algorithm_name, model_name, sample_name, eta))
+                        # if algorithm_name == "zeroth":
+                        #     for alpha in alpha_list:
+                        #         for memory_length in memory_length_list:
+                        #             g = os.walk(r"../performance/params/{}/{}/{}/{}/eta={}/alpha={:.2}/memory_length={}".format(
+                        #                         dataset_name,
+                        #                         algorithm_name,
+                        #                         model_name, sample_name,
+                        #                         eta, float(alpha),
+                        #                         memory_length))
+                        # else:
+                        g = os.walk(r"../performance/params/{}/{}/{}/{}/eta={}".format(dataset_name, algorithm_name, model_name, sample_name, eta))
                         for path, dir_list, file_list in g:
                             # print(path, dir_list, file_list)
                             for file_name in file_list:
                                 csv_path = (os.path.join(path, file_name))
                                 csv_file = pd.read_csv(csv_path)
                                 current_loss_column = np.array(csv_file["current_loss"])
+                                if np.max(current_loss_column) >= 0.75:
+                                    continue
+                                print(current_loss_column)
                                 current_loss_list.append(current_loss_column[-1])
+                                current_loss_filename.append(file_name)
                         if len(current_loss_list) == 0:
                             continue
                         sorted_list = np.sort(current_loss_list)
-                        # print(sorted_list)
-                        loss = sorted_list[max(times_list) // 2]
+                        # loss = sorted_list[max(times_list) // 2]
+                        loss = sorted_list[0]
+                        loss_index = np.argsort(current_loss_list)
+                        cur_filename = current_loss_filename[loss_index[0]]
 
                         if best_loss > loss:
                             best_loss = loss
                             best_eta = eta
+                            best_filename = cur_filename
 
                         # print("{} {} eta={} memory_length={} alpha={} loss is {}\n".format(dataset_name, algorithm_name,
                         #                                                            best_eta, memory_length,
@@ -237,6 +247,7 @@ def summary_csv():
                     print(model_name, sample_kind, dataset_name, algorithm_name)
                     current_best_eta_list.append(copy.deepcopy(best_eta))
                     current_best_loss_list.append(copy.deepcopy(best_loss))
+                    current_best_filename_list.append(copy.deepcopy(best_filename))
                     current_best_model_list.append(copy.deepcopy(model_name))
                     current_best_sample_list.append(copy.deepcopy(sample_kind))
                     current_dataset_name_list.append(copy.deepcopy(dataset_name))
@@ -248,12 +259,12 @@ def sum_up_param():
     mkdir("../performance/sum_up/eta")
     solver = excel_solver(file_path_import="../performance/sum_up/eta/eta_info.csv")
     solver.save_best_param(current_algorithm_name_list, current_dataset_name_list, current_best_eta_list,
-                           current_best_loss_list, current_best_sample_list, current_best_model_list)
+                           current_best_loss_list, current_best_sample_list, current_best_model_list, current_best_filename_list)
 
 
 if __name__ == '__main__':
     freeze_support()
-    get_eta_params()
+    # get_eta_params()
     # get_zeroth_params()
     summary_csv()
     sum_up_param()
